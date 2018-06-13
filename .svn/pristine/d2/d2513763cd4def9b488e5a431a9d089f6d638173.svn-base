@@ -1,0 +1,147 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%><%@
+taglib
+	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+	String pjaxContentJSP = request.getAttribute("pjax-content")
+			+ ".jsp";
+%><!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>哈尔滨学院青檬云印</title>
+
+<!-- Bootstrap -->
+<link href="<%=basePath%>static/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+<link href="<%=basePath%>static/css/style.css" rel="stylesheet">
+<link href="<%=basePath%>static/css/displaystyle.css" rel="stylesheet">
+<link rel="icon" href="<%=basePath%>favicon.png">
+<script>
+			var basePath = '<%=basePath%>';
+</script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="<%=basePath%>static/jquery/2.1.1/jquery.min.js"></script>
+<script src="<%=basePath%>static/js/jquery-dateFormat.zh-cn.min.js"></script>
+<script src="<%=basePath%>static/js/jquery.tmpl.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="<%=basePath%>static/bootstrap/js/bootstrap.min.js"></script>
+<script src="<%=basePath%>static/js/imagesloaded.pkgd.min.js"></script>
+<script src="<%=basePath%>static/masonry/masonry.pkgd.min.js"></script>
+
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+		  <script src="<%=basePath%>static/assets/js/html5shiv.js"></script>
+		  <script src="<%=basePath%>static/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+<script src="<%=basePath%>static/js/common.js"></script>
+<link rel="icon" href="<%=basePath%>icon.jpg">
+</head>
+<body>
+	<nav class="navbar navbar-default navbar-fixed-top">
+		<div class="container">
+			<!-- Brand and toggle get grouped for better mobile display -->
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed"
+					data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
+					aria-expanded="false">
+					<span class="sr-only">Toggle navigation</span>
+				</button>
+				<a class="navbar-brand" href="<%=basePath%>">HrbXy</a>
+			</div>
+			<!-- Collect the nav links, forms, and other content for toggling -->
+			<div class="collapse navbar-collapse"
+				id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav">
+					<li><a href="<%=basePath%>">
+							<div>首页</div> <span class="sr-only">(current)</span>
+					</a></li>
+					<li><a href="<%=basePath%>option">
+							<div>云印中心</div>
+					</a></li>
+					<li><a href="<%=basePath%>bunko">
+							<div>青檬文库</div>
+					</a></li>
+					<li><a href="<%=basePath%>bunko/seomain">
+							<div>搜索</div>
+					</a></li>
+				</ul>
+
+				<ul class="nav navbar-nav navbar-right">
+					<c:choose>
+						<c:when test="${currentUser.id ne null }">
+							<%--登录用户 --%>
+							<li class="dropdown"><a href="<%=basePath%>roborder"><span
+									class="glyphicon glyphicon-gift"></span> <span
+									class="hidden-sm">我要免费打印</span></a></li>
+							<li class="dropdown"><a id="user" href="#"
+								class="dropdown-toggle" data-toggle="dropdown"> <c:choose>
+										<c:when test="${currentUser.avatar ne null }">
+											<img class="avatar"
+												src="<%=basePath %>avatars/${currentUser.avatar}"
+												height="30" width="30" alt="" />
+										</c:when>
+										<c:otherwise>
+											<img class="avatar"
+												src="<%=basePath%>static/images/default-avatar.png"
+												height="30" width="30" alt="">
+										</c:otherwise>
+									</c:choose> <span class="hidden-sm">
+									${currentUser.c}</span> <span
+									class="caret"></span>
+							</a>
+
+								<ul class="dropdown-menu" role="menu">
+									<li><a href="<%=basePath %>user/${currentUser.id }?fffas"><span
+											class="glyphicon glyphicon-home" aria-hidden="true"></span>
+											我的主页</a></li>
+									<li><a href="<%=basePath%>forget"><span
+											class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+											修改密码</a></li>
+									<li><a href="<%=basePath%>user/safecenter"><span
+											class="glyphicon glyphicon-lock" aria-hidden="true"></span>
+											安全中心</a></li>
+									<li class="divider"></li>
+									<li><a href="<%=basePath%>logout"> <span
+											class="glyphicon glyphicon-off" aria-hidden="true"></span> 注销
+									</a></li>
+								</ul></li>
+						</c:when>
+
+						<c:otherwise>
+							<%--未登录用户 --%>
+							<li><a id="signup" href="<%=basePath%>signup">注册</a>
+							<li>
+							<li><a id="signin" href="<%=basePath%>signin">登录</a></li>
+						</c:otherwise>
+					</c:choose>
+
+				</ul>
+				<!-- /.navbar-right -->
+			</div>
+			<!-- /.navbar-collapse -->
+		</div>
+		<!-- /.container-fluid -->
+	</nav>
+
+	<jsp:include page="<%=pjaxContentJSP%>"></jsp:include>
+	<footer class="text-center">
+		<hr>
+		<ul class="list-inline">
+			<li>琼ICP备16000661号-1</li>
+			<li>QQ:648269794 && TEL:13263506627</li>
+			<!--  <li><a href=""><span>隐私协议</span></a></li>-->
+			<li>©哈尔滨学院青檬工作室</li>
+		</ul>
+	</footer>
+
+</body>
+</html>

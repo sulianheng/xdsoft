@@ -1,0 +1,54 @@
+package com.xdsoft.mvc.service;
+
+import com.jacob.activeX.ActiveXComponent;
+import com.jacob.com.Dispatch;
+import com.jacob.com.Variant;
+
+public class CountPageService {
+
+	// word运行程序对象
+	private ActiveXComponent word;
+	// Word文档对象
+	private Dispatch doc;
+	// doc文档集合
+	private Dispatch documents;
+
+	private boolean Exit = true;
+
+	/** */
+	/**
+	 * 
+	 * @param visible
+	 *            为true表示word应用程序可见
+	 * @return
+	 */
+	public CountPageService(boolean visible) {
+		if (word == null) {
+			word = new ActiveXComponent("Word.Application");
+			word.setProperty("Visible", new Variant(visible));
+			documents = word.getProperty("Documents").toDispatch();
+		}
+	}
+
+	public String countPage(String docPath) {
+		doc = Dispatch.call(documents, "Open", docPath).toDispatch();
+		Dispatch content = Dispatch.get(doc, "Content").toDispatch();
+		// Dispatch.call(content, "Information", new Variant(4)).toInt();
+
+		return Dispatch.call(content, "Information", new Variant(4)).toString();
+	}
+
+	/** */
+	/**
+	 * 关闭全部应用
+	 * 
+	 */
+	public void close() {
+		if (word != null) {
+			Dispatch.call(word, "Quit");
+			word.invoke("Quit", 0);
+			word = null;
+		}
+		documents = null;
+	}
+}

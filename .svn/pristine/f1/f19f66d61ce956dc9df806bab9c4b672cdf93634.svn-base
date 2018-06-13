@@ -1,0 +1,138 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+ <link href="<%=basePath%>static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	
+		<style type="text/css">
+   .upload{
+    width: 300px;
+    padding-left: 30px;
+    left:50%;
+   }
+
+    </style>
+
+<div class="container" style="width: 700px">
+
+	 <div class="row">
+     <div class="col-lg-7">
+     
+	<c:forEach  var="filename"  items="${listfile }" varStatus="status">
+		
+     
+	 <div class="first">
+            <div class="clearfix">
+                <div  style="float:left"><img src="<%=basePath%>photos/wps.png"><span>  ${filename.filesname}  </span></div>
+                <div  style="float:right"><span>  111  </span></div>
+            </div>
+            <div>
+              <p><span>  ${filename.desc_info}  </span></p>
+            </div>
+            <div style="float:left">
+              <table>
+                <tr>
+                  <td><span>  ${filename.timestamp}  </span>&nbsp;&nbsp;&nbsp;|&nbsp;</td>
+                  <td><span>  ${filename.totalPagenum}  </span> &nbsp;&nbsp;&nbsp;|&nbsp;</td>
+                  <td><span>  444</span> &nbsp;&nbsp;&nbsp;|&nbsp;</td>
+                  <td><span>  ${filename.creater}  </span></td>
+                </tr>
+              </table>
+            </div>
+            <div style="float:right">
+              <form action="<%=basePath%>bunko/onlineseo" method="post">
+              
+						<input hidden="hidden"  name="findfile"  value="${findfile }">
+						<input hidden="hidden"  name="fileid"  value="${filename.id }">
+						<input type="submit" value="预览">
+				</form>
+            </div>  
+        </div>
+	
+	
+	<br>
+       <hr>
+       </c:forEach>
+     </div>
+	
+	
+     <div class="col-lg-5" >
+      <div  class="upload" style="border-left:1px solid #ddd">
+      			<form action="<%=basePath%>bunko/onlineupload" enctype="multipart/form-data" >
+					<input id="submit" type="image" value="上传" src="<%=basePath%>photos/sc.jpg" method="post" onclick="submit()">
+				</form>
+
+        <div class="content">
+  <div class="mainpart">    
+    <div id="homedoclist">
+        
+         <div class="commonbox1">
+      <div class="topic">
+        <h2><a href="#">热门文章</a></h2> 
+      </div>
+      <div class="box">
+    <div class="boxdiv" style="overflow:hidden;_overflow:hidden;_zoom:1;position:relative;" id="books_453" pc_id="453" page="1" loading="false">
+            <div class="names">
+              <h3><a href="#" target="_blank" title="">七里香</a></h3>
+            </div>
+            <div class="books">
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF">
+                此处为对热门文档的相关概述或介绍:<br>
+              </a>
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF"> 
+                雨下整夜我的爱溢出就像雨水，窗台蝴蝶像诗里纷飞的美丽章节.<br>我接着写把永远爱你写进诗的结尾，你是我唯一想要的了解。
+              </a>
+            </div>       
+    </div>
+
+     <div class="boxdiv" style="overflow:hidden;_overflow:hidden;_zoom:1;position:relative;" id="books_453" pc_id="453" page="1" loading="false">
+            <div class="names">
+              <h3><a href="#" target="_blank" title="">七里香</a></h3>
+            </div>
+            <div class="books">
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF">
+                此处为对热门文档的相关概述或介绍:<br>
+              </a>
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF"> 
+                雨下整夜我的爱溢出就像雨水，窗台蝴蝶像诗里纷飞的美丽章节.<br>我接着写把永远爱你写进诗的结尾，你是我唯一想要的了解。
+              </a>
+            </div> 
+    </div>
+
+    <div class="boxdiv" style="overflow:hidden;_overflow:hidden;_zoom:1;position:relative;" id="books_453" pc_id="453" page="1" loading="false">
+            <div class="names">
+              <h3><a href="#" target="_blank" title="">七里香</a></h3>
+            </div>
+            <div class="books">
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF">
+                此处为对热门文档的相关概述或介绍:<br>
+              </a>
+              <a href="#" target="_blank" style="background:url(#) no-repeat center center;background-color:#FFF"> 
+                雨下整夜我的爱溢出就像雨水，窗台蝴蝶像诗里纷飞的美丽章节.<br>我接着写把永远爱你写进诗的结尾，你是我唯一想要的了解。
+              </a>
+            </div>
+    </div>
+    
+        </div>
+        </div>
+<br>
+
+<a href="#"><img src="<%=basePath%>photos/zui.png"></a><br><br>
+
+     </div>
+     </div>
+
+
+</div>
+	</div>
+	</div>
+	</div>
+	
+	
+	
+	
+</div>

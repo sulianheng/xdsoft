@@ -1,0 +1,11 @@
+eclipse.preferences.version=1
+encoding//src/main/java/com/xdsoft/mvc/controller=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/controller/DashBoard.java=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/controller/PrintController.java=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/controller/RobOrderController.java=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/controller/UserController.java=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/service/RobOrderService.java=UTF-8
+encoding//src/main/java/com/xdsoft/mvc/service/UserService.java=UTF-8
+encoding//src/main/webapp/WEB-INF/view/print/success.jsp=UTF-8
+encoding//src/main/webapp/WEB-INF/view/roborder/roborder.jsp=UTF-8
+encoding/<project>=UTF-8

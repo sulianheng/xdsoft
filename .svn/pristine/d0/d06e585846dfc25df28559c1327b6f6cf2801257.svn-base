@@ -1,0 +1,298 @@
+package com.xdsoft.mvc.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.xdsoft.auth.AuthInterceptor;
+import com.xdsoft.mvc.service.ManagerService;
+import com.xdsoft.mvc.service.OrdersService;
+import com.xdsoft.mvc.service.UserService;
+import com.xdsoft.mvc.tools.PageTool;
+import com.xdsoft.mvc.util.AuthUtils;
+import com.xdsoft.web.framework.annotation.Auth;
+import com.xdsoft.web.framework.annotation.PublicPage;
+import com.xdsoft.web.framework.annotation.SinglePage;
+import com.xdsoft.web.session.SessionUtils;
+
+/**
+ * 后台管理
+ * 
+ * @author reyenxu
+ * */
+@Controller
+@RequestMapping(value = "/manager")
+public class ManagerController {
+
+	@Resource
+	private ManagerService managerService;
+	@Resource
+	private OrdersService ordersService;
+	@Resource
+	private AuthUtils authUtils;
+	@Resource
+	private UserService userService;
+
+	/**
+	 * 后台欢迎页
+	 * */
+	@Auth
+	@SinglePage
+	@RequestMapping(value = "/welcome")
+	public String welcome(HttpServletRequest request) {
+
+		return "manager/welcome";
+	}
+
+	/**
+	 * 后台管理登陆入口
+	 * */
+	@SinglePage
+	@RequestMapping(value = "/login", method = RequestMethod.GET)
+	public String managerLogin(HttpServletRequest request) {
+
+		return "manager/login";
+	}
+
+	/**
+	 * 处理登录请求
+	 * */
+	@SinglePage
+	@RequestMapping(value = "/index", method = RequestMethod.POST)
+	public String loginProcess(@RequestParam String unique,
+			@RequestParam String password, HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		Map<String, Object> user = managerService.verifylogin(unique, password);
+		if (user != null) {
+			SessionUtils.setAttribute(session, user);
+			session.setAttribute(AuthInterceptor.SESSION_AUTHS,
+					user.get("author"));
+			System.out.print(authUtils.getLoginUser(request, null, null));
+			return "/manager/manager";
+		} else {
+			String message = "用户名或密码不正确或您不是后台人员!";
+			request.setAttribute("message", message);
+			return "/manager/login";
+		}
+
+	}
+
+	/**
+	 * 后台管理主页面入口
+	 * */
+	@Auth("1/2")
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = { "/manager", "index" })
+	public String manager(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		return "/manager/manager";
+	}
+
+	/**
+	 * 登出
+	 * 
+	 * @param token
+	 * @param secret
+	 * @param request
+	 * @param response
+	 */
+	@Auth
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "logout")
+	public String signout(@CookieValue(required = false) String token,
+			@CookieValue(required = false) String secret,
+			HttpServletRequest request, HttpServletResponse response) {
+		SessionUtils.removeAttribute(request.getSession());
+		removeTokenCookie(response);
+		return "/manager/login";
+	}
+
+	/**
+	 * @param response
+	 */
+	private void removeTokenCookie(HttpServletResponse response) {
+		Cookie tokenCookie = new Cookie("token", null);
+		tokenCookie.setMaxAge(0);
+		response.addCookie(tokenCookie);
+		Cookie secretCookie = new Cookie("secret", null);
+		secretCookie.setMaxAge(0);
+		response.addCookie(secretCookie);
+	}
+
+	/**
+	 * 用户搜素入口
+	 * */
+	@Auth
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/searchuser")
+	public String userSearch(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/search";
+	}
+
+	/**
+	 * 用户搜所处理
+	 * */
+	@Auth
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/searchuser", method = RequestMethod.POST)
+	public String userSearch(@RequestParam String content,
+			HttpServletRequest request, HttpServletResponse response) {
+		List<Map<String, Object>> userlist = managerService.searchUser(content);
+		if (userlist.size() > 0) {
+			request.setAttribute("userlist", userlist);
+		}
+		return "/manager/search";
+	}
+
+	/**
+	 * 添加管理员入口
+	 * */
+	@Auth
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/addadmin", method = RequestMethod.GET)
+	public String addAdmin(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/addAdmin";
+	}
+
+	/**
+	 * 添加管理员
+	 * */
+	@Auth
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/addadmin", method = RequestMethod.POST)
+	public String addAdmin(@RequestParam String unique,
+			@RequestParam String author, HttpServletRequest request,
+			HttpServletResponse response) {
+		if (managerService.addAdmin(unique, author) > 0) {
+			request.setAttribute("message", "添加管理员成功");
+		} else {
+			request.setAttribute("message", "添加管理员失败,可能该用户信息不存在");
+		}
+
+		return "/manager/addAdmin";
+	}
+
+	/**
+	 * 所有订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/allOrderDetail")
+	public String AllOrderDetail(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/AllOrder";
+	}
+
+	/**
+	 * Ajax请求,所有订单详情页
+	 * */
+	@RequestMapping(value = "/getAllOrderDetail", method = RequestMethod.GET)
+	public @ResponseBody
+	List<Map<String, Object>> allOrderDetail(
+			@RequestParam(required = false) String start_page,
+			@RequestParam(required = false) String state,
+			@RequestParam(required = false) String limit,
+			HttpServletRequest request, HttpServletResponse response) {
+		request.setAttribute("page", PageTool.getStartAndEndLimit(start_page, limit));
+		return managerService.queryAllOrderDetail(start_page, limit,state);
+	}
+
+	/**
+	 * 所有未完成订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getUnfinishedOrder")
+	public String getUnfinishedOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/unfinishedOrder";
+	}
+
+	/**
+	 * Ajax请求,所有未完成订单详情页
+	 * */
+	@RequestMapping(value = "/getUnfinishedOrder_", method = RequestMethod.GET)
+	public @ResponseBody
+	List<Map<String, Object>> getUnfinishedOrder(
+			@RequestParam(required = false) Object state,
+			HttpServletRequest request, HttpServletResponse response) {
+		return managerService.queryAllUnfinishedOrderDetail();
+	}
+
+	/**
+	 * 已完成订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getFinishedOrder")
+	public String getFinishedOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/finishedOrder";
+	}
+
+	/**
+	 * Ajax请求,所有已完成订单详情页
+	 * */
+	@RequestMapping(value = "/getFinishedOrder_", method = RequestMethod.GET)
+	public @ResponseBody
+	List<Map<String, Object>> getFinishedOrder(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryAllFinishedOrderDetail();
+	}
+
+	/**
+	 * 超过三天订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getTimeoutOrder")
+	public String getTimeoutOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/timeoutOrder";
+	}
+
+	/**
+	 * Ajax请求,超过三天订单详情页
+	 * */
+	@RequestMapping(value = "/getTimeoutOrder_", method = RequestMethod.GET)
+	public @ResponseBody
+	List<Map<String, Object>> getTimeoutOrder(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryTimeoutOrderDetail();
+	}
+
+	/**
+	 * Ajax请求获取同一订单下相关打印文件信息
+	 * 
+	 * @param id
+	 * */
+	@RequestMapping(value = "/getAboveOrderAllFilesPrintInfo", method = RequestMethod.POST)
+	public @ResponseBody
+	List<Map<String, Object>> getAboveOrderAllFilesPrintInfo(
+			@RequestParam(required = false) Object state,
+			@RequestParam Object id, HttpServletRequest request,
+			HttpServletResponse response) {
+		return ordersService.queryFilesInfoByOrderlist_id(id);
+	}
+}

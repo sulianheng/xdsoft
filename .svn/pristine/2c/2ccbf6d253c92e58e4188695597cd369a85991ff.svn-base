@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.BunkoMapper">
+
+	<!-- 插入文件 -->
+	<insert id="addBunko_fileinfo" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		bunko_fileinfo(filesname,tempfilelocal,creater,docType,size,cats,totalPagenum,isdownload,isPrivate,fileunique,timestamp,desc_info,file_Md5)
+		values(#{filesname},#{tempfilelocal},#{creater},#{docType},#{size},#{cats},#{totalPagenum},#{isdownload},#{isPrivate},#{fileunique},#{timestamp},#{desc_info},#{file_Md5})
+	</insert>
+	
+	<!-- 插入文件统计信息初始化 -->
+	<insert id="addBunko_countinfo" parameterType="java.util.Map"
+	useGeneratedKeys="true" keyProperty="id">
+		insert into
+		bunko_countinfo(file_id,viewcount,downloadcount,commentcount,timestamp)
+		values(#{file_id},0,0,0,#{timestamp})
+	</insert>
+	<!--  插入文库临时文件 -->
+	<insert id="addBunko_temp" parameterType="java.util.Map"
+	useGeneratedKeys="true" keyProperty="id">
+		insert into 
+		bunko_temp(filename,fileunique,filepath)
+		values(#{filename},#{fileunique},#{filepath})
+	
+	</insert>
+	<!-- 根据文件唯一标识查找文件 -->
+	<select id="selectfileid" parameterType="String"
+	resultType="int">
+		select b.id
+		from bunko_fileinfo b where b.fileunique=#{fileunique}
+	</select>
+	<!-- 根据唯一标识查找临时路径 -->
+	<select id="selecttempath" parameterType="String"
+	resultType="String">
+	select filepath
+	from bunko_temp
+	where fileunique=#{fileunique}
+	</select>
+	
+	
+	<!-- 搜索文件 -->
+	<select id="selectbunkofiles_info" parameterType="String"
+		resultType="java.util.Map">
+		select *
+		from bunko_fileinfo where filesname like
+		#{matchFilename}
+	</select>
+
+	<!--  查找文件 -->
+	<select id="selectbukofile"  parameterType="String"
+	resultType="java.util.Map">
+		select * 
+		from bunko_fileinfo where id=#{bunkofileid}
+	</select>
+
+	<!-- 判断是否收藏 -->
+	<select id="selectcollection" parameterType="String"
+	resultType="java.util.Map">
+	select *
+	from bunko_collection
+	where file_id=#{bunkofileid}  and  user_id=#{userid}
+	</select>
+
+	<!-- 判断上传时文件是否重名 -->
+	<select id="ifexitfileforfilename" parameterType="String"
+	resultType="java.util.Map">
+	select *
+	from bunko_fileinfo where filesname=#{filename}
+	</select>
+	<!-- 文件访客加一 -->
+	<update id="updatefileviewcount" parameterType="java.util.Map"
+	useGeneratedKeys="true" keyProperty="id">
+	update bunko_countinfo set
+	viewcount = #{viewcount}
+	where file_id = #{fileid}
+	</update>
+	<!-- 文件打印加一 -->
+	<update id="updatefiledownloadcount" parameterType="java.util.Map"
+	useGeneratedKeys="true" keyProperty="id">
+	update bunko_countinfo set
+	downloadcount = #{downloadcount}
+	where file_id = #{fileid}
+	</update>
+	<!-- 获得viewcount -->
+	<select id="getviewcount" parameterType="String"
+	resultType="int">
+	select viewcount from bunko_countinfo
+	where file_id = #{fileid}
+	</select>
+	<!-- 获得doownloadcount -->
+	<select id="getdownloadcount" parameterType="String"
+	resultType="int">
+	select downloadcount from bunko_countinfo
+	where file_id = #{fileid}
+	</select>
+	
+	<!-- doctype -->
+	<select id="getdoctype" parameterType="String"
+	resultType="int">
+	select id
+	from bunko_doctype
+	where docType=#{suffix}
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,170 @@
+package com.xdsoft.mvc.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.BunkoMapper;
+import com.xdsoft.mvc.util.AuthUtils;
+
+
+
+@Service
+public class BunkoServise {
+
+	@Resource
+	private BunkoMapper bunkomapper;
+	
+	@Resource
+	private AuthUtils authUtils;
+
+	/*
+	 * 搜索文件
+	 * 首先判断用户是否登录
+	 * 然后判断该文件权限是什么
+	 * 之后返回值
+	 * 
+	 */
+	public List<Map<String, Object>>  findBymatchfilename(String matchfhilename)
+	{
+		
+		List<Map<String, Object>> fileslist = null;
+		
+		fileslist = bunkomapper.selectbunkofiles_info("%" + matchfhilename + "%");
+		String tempmatch = "%"; 
+		
+		if(fileslist.isEmpty())
+		{
+			for(int i = 0;i < matchfhilename.length(); i++)
+			{
+				tempmatch = tempmatch  + matchfhilename.charAt(i) + "%";
+				
+			}
+			System.out.println(tempmatch);
+			fileslist = bunkomapper.selectbunkofiles_info(tempmatch);
+			
+		}
+					
+		
+		return fileslist;
+	}
+	
+	
+	
+	
+	public Map<String, Object>  getinfoByonline(String fileid)
+	{
+		
+		Map<String, Object>  filelist  = new HashMap<String, Object>();
+		
+		filelist = bunkomapper.selectbukofile(fileid);
+		
+		
+		return filelist;
+	}
+	
+	
+	
+	/*
+	 * 根据文件id和用户id判断用户是否拥有该文件的所有浏览权限
+	 */
+	
+	public boolean  getuserreadRoot(HttpServletRequest request,String fileid)
+	{
+		
+		// 获取用户登陆状态
+		Map<String, Object> user = authUtils.getLoginUser(request, null, null);
+		
+		
+		if(user != null)
+		{
+			
+		
+		System.out.println(user);
+		
+		String userid = (String) String.valueOf(user.get("id"));
+		
+		System.out.println("========================" + fileid);
+		
+		Map<String, Object> collection = bunkomapper.selectcollection(fileid, userid);
+		
+		if(collection != null)
+			return true;
+		else  
+			return false;
+	
+		}
+		else return false;
+	}
+	
+	
+	
+	public boolean iflogin(HttpServletRequest request)
+	{
+		Map<String, Object> user = authUtils.getLoginUser(request, null, null);
+		if(user != null)
+		{
+
+			if(user.containsKey("id"))
+			{
+				System.out.println(user);
+				return true;
+			}else{
+				return false;
+			}
+		}
+			else
+			return false;
+					
+	}
+	
+	/*
+	 * 判断上传的文件是否重名
+	 */
+	public boolean ifexitfile(String filename)
+	{
+		
+		List<Map<String, Object>> fileinfos = bunkomapper.ifexitfileforfilename(filename);
+		System.out.println("===================" + fileinfos);
+		if(!fileinfos.isEmpty())
+		{
+			System.out.println("true");
+			return true;
+		}
+		else
+			return false;
+		
+	}
+	
+	
+	//封装三个预览文件
+	public List<Map<String, Object>> seofilefromallfile(List<Map<String, Object>> fileslist,String fileid)
+	{
+		List<Map<String, Object>> listfile = new ArrayList<Map<String,Object>>();
+		System.out.println(fileslist);
+		Iterator<Map<String, Object>>   iterator = fileslist.iterator();
+			while(iterator.hasNext())
+			{
+				Map<String, Object> tempmap =  iterator.next();
+		
+				if(tempmap.get("id") != Integer.valueOf(fileid))
+					listfile.add(tempmap);
+				
+				if(listfile.size() == 3)
+					break;
+			}
+		
+		return listfile;
+	}
+	
+	
+	
+}

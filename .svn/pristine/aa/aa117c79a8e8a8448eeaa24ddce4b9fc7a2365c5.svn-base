@@ -1,0 +1,395 @@
+package com.xdsoft.mvc.service;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.xdsoft.mvc.mapper.BunkoMapper;
+import com.xdsoft.mvc.util.AuthUtils;
+import com.xdsoft.mvc.util.RandOrdernum;
+import com.xdsoft.mvc.util.TransformUtil;
+
+
+
+@Service
+public class BunkoServise {
+
+	@Resource
+	private BunkoMapper bunkomapper;
+	
+	@Resource
+	private AuthUtils authUtils;
+	@Resource
+	private TransformUtil transformUtils;
+	
+	@Resource
+	private CountPageService countPageService;
+	
+	
+	/*
+	 * 搜索文件
+	 * 首先判断用户是否登录
+	 * 然后判断该文件权限是什么
+	 * 之后返回值
+	 * 
+	 */
+	public List<Map<String, Object>>  findBymatchfilename(String matchfhilename)
+	{
+		
+		List<Map<String, Object>> fileslist = null;
+		
+		fileslist = bunkomapper.selectbunkofiles_info("%" + matchfhilename + "%");
+		String tempmatch = "%"; 
+		
+		if(fileslist.isEmpty())
+		{
+			for(int i = 0;i < matchfhilename.length(); i++)
+			{
+				tempmatch = tempmatch  + matchfhilename.charAt(i) + "%";
+				
+			}
+			System.out.println(tempmatch);
+			fileslist = bunkomapper.selectbunkofiles_info(tempmatch);
+			
+		}
+					
+		
+		return fileslist;
+	}
+	
+	
+	
+	
+	public Map<String, Object>  getinfoByonline(String fileid)
+	{
+		
+		Map<String, Object>  filelist  = new HashMap<String, Object>();
+		
+		filelist = bunkomapper.selectbukofile(fileid);
+		
+		
+		return filelist;
+	}
+	
+	
+	
+	/*
+	 * 根据文件id和用户id判断用户是否拥有该文件的所有浏览权限
+	 */
+	
+	public boolean  getuserreadRoot(HttpServletRequest request,String fileid)
+	{
+		
+		// 获取用户登陆状态
+		Map<String, Object> user = authUtils.getLoginUser(request, null, null);
+		
+		
+		if(user != null)
+		{
+			
+		
+		System.out.println(user);
+		
+		String userid = (String) String.valueOf(user.get("id"));
+		
+		System.out.println("========================" + fileid);
+		
+		Map<String, Object> collection = bunkomapper.selectcollection(fileid, userid);
+		
+		if(collection != null)
+			return true;
+		else  
+			return false;
+	
+		}
+		else return false;
+	}
+	
+	
+	
+	public boolean iflogin(HttpServletRequest request)
+	{
+		Map<String, Object> user = authUtils.getLoginUser(request, null, null);
+		if(user != null)
+		{
+			if(user.containsKey("id"))
+			{
+				System.out.println(user);
+				return true;
+			}
+			else
+				return false;
+
+		}
+			else
+			return false;
+					
+	}
+	
+	/*
+	 * 判断上传的文件是否重名
+	 */
+	public boolean ifexitfile(String filename)
+	{
+		
+		List<Map<String, Object>> fileinfos = bunkomapper.ifexitfileforfilename(filename);
+		System.out.println("===================" + fileinfos);
+		if(!fileinfos.isEmpty())
+		{
+			System.out.println("true");
+			return true;
+		}
+		else
+			return false;
+		
+	}
+	
+	
+	//封装三个预览文件
+	public List<Map<String, Object>> seofilefromallfile(List<Map<String, Object>> fileslist,String fileid)
+	{
+		List<Map<String, Object>> listfile = new ArrayList<Map<String,Object>>();
+		System.out.println(fileslist);
+		Iterator<Map<String, Object>>   iterator = fileslist.iterator();
+			while(iterator.hasNext())
+			{
+				Map<String, Object> tempmap =  iterator.next();
+		
+				if(tempmap.get("id") != Integer.valueOf(fileid))
+					listfile.add(tempmap);
+				
+				if(listfile.size() == 3)
+					break;
+			}
+		
+		return listfile;
+	}
+	
+	
+	/*
+	 * 
+	 * 
+	 * 
+	 * 文库文件上传
+	 * 
+	 * 
+	 */
+	
+	public void bunkoUploadFile(
+			List<Map<String, Object>> printinfo , String FilePath ,String userid)
+			throws IOException {
+ 
+			Iterator<Map<String, Object>> iterator = printinfo.iterator();
+			
+			while(iterator.hasNext())
+			{
+				Map<String, Object> fileinfo = iterator.next();
+				System.out.println(fileinfo);
+				String fileunique =    fileinfo.get("tempfileunique").toString();
+				System.out.println(fileunique);
+				String path = bunkomapper.selecttempath(fileunique);
+				
+				System.out.println(path);
+				File file =  new File(path);
+				
+				
+				Map<String, Object> arr = new HashMap<String, Object>();
+				String filename =  fileinfo.get("title").toString();
+				
+				String rootPath = System.getProperty("catalina.home");
+				File dir = new File(rootPath + File.separator + FilePath);
+				String suffix = file.getName().substring(
+						file.getName().lastIndexOf("."));
+				String suffix1 = file.getName().substring(
+						file.getName().lastIndexOf(".")+1);
+				System.out.println(suffix1);
+				
+				String FileSavename = fileunique + suffix;
+				
+				if (file.exists()) {
+					
+								InputStream in = null;
+								OutputStream out = null;
+								if (!dir.exists())
+									dir.mkdirs();
+							File serverFile = new File(dir.getAbsolutePath()
+							+ File.separator + FileSavename);
+							String page = "";
+							if(suffix.equals(".doc") || suffix.equals(".docx") || suffix.equals(".txt"))
+							{
+								page = countPageService.CountPage(path);
+								
+							}
+							
+							
+							Map<String, Object> bunkofileinfo = new HashMap<String, Object>();
+							fileinfo.put("filesname", filename);
+							fileinfo.put("tempfilelocal", serverFile.getCanonicalPath());
+							fileinfo.put("creater", userid);
+							fileinfo.put("docType", bunkomapper.getdoctype(suffix1));
+							fileinfo.put("size", String.valueOf(file.length()));
+							fileinfo.put("cats", fileinfo.get("cats")+"d");
+							fileinfo.put("totalPagenum", page);
+							fileinfo.put("isdownload", 0);
+							fileinfo.put("isPrivate", fileinfo.get("isprivate"));
+							fileinfo.put("fileunique", fileunique);
+							fileinfo.put("timestamp", new Timestamp(System.currentTimeMillis()) );
+							fileinfo.put("desc_info", fileinfo.get("desc_info"));
+							fileinfo.put("file_Md5", "sssss");
+							
+							
+							
+							bunkomapper.addBunko_fileinfo(fileinfo);
+							System.out.println(bunkomapper.selectfileid(fileunique));
+							int fileid = Integer.valueOf(bunkomapper.selectfileid(fileunique));
+							Map<String, Object> filecountinfo  = new HashMap<String, Object>();
+							System.out.println("ddddddddd");
+							filecountinfo.put("file_id", fileid);
+							filecountinfo.put("timestamp", new Timestamp(System.currentTimeMillis()));
+							System.out.println("ddddddddd");
+							bunkomapper.addBunko_countinfo(filecountinfo);
+							
+							
+							try {
+									in = new FileInputStream(file);
+									out = new FileOutputStream(serverFile);
+									byte[] b = new byte[1024];
+									int len = 0;
+									while ((len = in.read(b)) > 0) {
+										out.write(b, 0, len);
+											}
+								out.close();
+								in.close();
+
+								} catch (Exception e) {
+								arr.put("Experrno", 0);
+							
+								} finally {
+									if (out != null) {
+										out.close();
+										out = null;
+									}
+
+									if (in != null) {
+										in.close();
+										in = null;
+									}
+								}
+							
+
+							String source =(String) fileinfo.get("tempfilelocal");
+							String target = rootPath + "\\Uploadswf\\" + fileunique + ".pdf";
+							 if(suffix.equals(".doc") || suffix.equals(".txt") || suffix.equals(".docx"))
+								 transformUtils.word2pdf(source, target);
+								 else
+									 if(suffix.equals(".ppt"))
+										 transformUtils.ppt2PDF(source, target);
+							 
+							 String target1 = rootPath + "\\webapps\\xdsoft\\Uploadswf\\"
+									 			+ fileunique
+									 			+ ".swf";
+							 transformUtils.pdf2SWF(target, target1);
+								
+							
+							
+							
+							}else {
+								arr.put("errno", 0);
+								}
+						}
+		
+	}
+	
+	
+	public Map<String, Object> bunkoUploadtempFile(
+			MultipartFile files, String FilePath, String ordernum_id)
+			throws IOException {
+
+			Map<String, Object> fileinformation = new HashMap<String, Object>();
+			Map<String, Object> arr = new HashMap<String, Object>();
+			
+			String filename = files.getOriginalFilename();
+			String rootPath = System.getProperty("catalina.home");
+			File dir = new File(rootPath + File.separator + FilePath);
+			String suffix = files.getOriginalFilename().substring(
+					files.getOriginalFilename().lastIndexOf("."));
+			String fileunique = RandOrdernum.getOrderNo();
+			String FileSavename = fileunique + suffix;
+			
+			if (!files.isEmpty()) {
+				
+							InputStream in = null;
+							OutputStream out = null;
+
+							if (!dir.exists())
+								dir.mkdirs();
+						File serverFile = new File(dir.getAbsolutePath()
+						+ File.separator + FileSavename);
+						
+						fileinformation.put("fileunique", fileunique);
+						fileinformation.put("path",  serverFile.getCanonicalPath());
+						fileinformation.put("suffix", suffix);
+						
+						Map<String, Object> fileinfo = new HashMap<String, Object>();
+						fileinfo.put("filename", filename);
+						fileinfo.put("fileunique", fileunique);
+						fileinfo.put("filepath", serverFile.getCanonicalPath());
+						System.out.println(fileinfo);
+						bunkomapper.addBunko_temp(fileinfo);
+						
+						
+						try {
+								in = files.getInputStream();
+								out = new FileOutputStream(serverFile);
+								byte[] b = new byte[1024];
+								int len = 0;
+								while ((len = in.read(b)) > 0) {
+									out.write(b, 0, len);
+										}
+							out.close();
+							in.close();
+
+							} catch (Exception e) {
+							arr.put("Experrno", 0);
+						
+							} finally {
+								if (out != null) {
+									out.close();
+									out = null;
+								}
+
+								if (in != null) {
+									in.close();
+									in = null;
+								}
+							}
+							
+				}else {
+					arr.put("errno", 0);
+						
+			}
+		return fileinformation;
+	}
+	
+	
+	
+	
+	
+	
+}

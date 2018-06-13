@@ -1,0 +1,59 @@
+package com.xdsoft.mvc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public interface BunkoMapper{
+
+	/*
+	 * 
+	 * bunko_file操作
+	 * 
+	 */
+	
+	/*
+	 * 插入文库文件
+	 */
+	
+	int addBunko_fileinfo(Map<String, Object>  fileinfo);
+	int addBunko_countinfo(Map<String, Object> filecountinfo);
+	
+	/*
+	 * 根据文件唯一标识查找文件id
+	 */
+	int selectfileid(String fileunique);
+	
+	/*根据匹配文件名匹配相关的文件
+	 * 搜索文库的文件
+	 */
+	List<Map<String, Object>> selectbunkofiles_info(String matchFilename);  
+
+	
+	/*
+	 * 根据文件id查找文件信息
+	 * 
+	 */
+	Map<String, Object>  selectbukofile(String bunkofileid);
+	
+	
+	/*
+	 * 根据用户id和文件id判断用户是否已收藏该文件
+	 * 
+	 */
+	
+	Map<String, Object>  selectcollection(String bunkofileid,String userid);
+	
+	/*
+	 * 根据文件名判断是否存在重名文件
+	 */
+	
+	List<Map<String, Object>> ifexitfileforfilename(String filename);
+	
+	
+	
+	
+	
+}

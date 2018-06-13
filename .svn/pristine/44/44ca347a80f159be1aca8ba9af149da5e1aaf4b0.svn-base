@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.BunkoMapper">
+
+	<!-- 插入文件 -->
+	<insert id="addBunko_fileinfo" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		bunko_fileinfo(filesname,tempfilelocal,creater,docType,size,cats,totalPagenum,isdownload,isPrivate,fileunique,timestamp,desc_info,file_Md5)
+		values(#{filesname},#{tempfilelocal},#{creater},#{docType},#{size},#{cats},#{totalPagenum},#{isdownload},#{isPrivate},#{fileunique},#{timestamp},#{desc_info},#{file_Md5})
+	</insert>
+
+
+	<!-- 搜索文件 -->
+	<select id="selectbunkofiles_info" parameterType="String"
+		resultType="java.util.Map">
+		select *
+		from bunko_fileinfo where filesname like
+		#{matchFilename}
+	</select>
+
+	<!--  查找文件 -->
+	<select id="selectbukofile"  parameterType="String"
+	resultType="java.util.Map">
+		select * 
+		from bunko_fileinfo where id=#{bunkofileid}
+	</select>
+
+	<!-- 判断是否收藏 -->
+	<select id="selectcollection" parameterType="String"
+	resultType="java.util.Map">
+	select *
+	from bunko_collection
+	where file_id=#{bunkofileid}  and  user_id=#{userid}
+	</select>
+
+
+
+</mapper>

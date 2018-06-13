@@ -1,0 +1,63 @@
+package com.xdsoft.mvc.tools;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 获取分页的参数 工具类
+ * 
+ * @author reyenxu
+ * */
+public class PageTool {
+
+	/**
+	 * 获取开始和结束的序号
+	 * 
+	 * @param startPage
+	 *            : 开始的页数,start_page=-1 返回null
+	 * @param rows
+	 *            ： 一页显示的数据条目
+	 * @return start_limit,end_limit,start_page
+	 * */
+	public static Map<String, Object> getStartAndEndLimit(String startPage,
+			String rows) {
+		Map<String, Object> page = new HashMap<String, Object>();
+		if(rows == null){
+			rows = "5";
+		}
+		if (startPage == null) {
+			page.put("start_page", "1");
+			page.put("start_limit", 0);
+			page.put("end_limit", Integer.parseInt(rows));
+		} else if (startPage.equals("-1")) {
+			return null;
+		} else {
+			int startPage_ = Integer.parseInt(startPage);
+			int startLimit = (startPage_ - 1) * Integer.parseInt(rows);
+			int endLimit = startLimit + Integer.parseInt(rows);
+			page.put("start_page", startPage_);
+			page.put("start_limit", startLimit);
+			page.put("end_limit", endLimit);
+		}
+		return page;
+	}
+
+	/**
+	 * 获取最大页数
+	 * 
+	 * @param totalNum
+	 *            : 总数量
+	 * @param rows
+	 *            : 煤业显示的数量
+	 * */
+	public static int getMaxPage(String totalNum, String rows) {
+		int totalNum_ = Integer.parseInt(totalNum);
+		int rows_ = Integer.parseInt(rows);
+		int maxPage = totalNum_ / rows_;
+		if (rows_ * maxPage >= totalNum_) {
+			return maxPage;
+		} else {
+			return maxPage + 1;
+		}
+	}
+}

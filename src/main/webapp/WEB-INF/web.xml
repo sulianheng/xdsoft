@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+	id="note" version="3.0">
+
+	<display-name>xdsoft Application</display-name>
+	  <!-- 默认的错误处理页面 -->  
+    <error-page>  
+        <error-code>403</error-code>  
+        <location>/pageError/unkonwn</location>  
+    </error-page>  
+    <error-page>  
+        <error-code>400</error-code>  
+        <location>/pageError/unkonwn</location>  
+    </error-page>  
+    <error-page>  
+        <error-code>404</error-code>  
+        <location>/pageError/notFound</location>  
+    </error-page>  
+    <!-- 仅仅在调试的时候注视掉,在正式部署的时候不能注释 -->  
+    <!-- 这样配置也是可以的，表示发生500错误的时候，转到500.jsp页面处理。 -->  
+    <error-page>   
+        <error-code>500</error-code>   
+        <location>/pageError/serverError</location>   
+    </error-page>   
+      
+    <!-- 这样的配置表示如果jsp页面或者servlet发生java.lang.Exception类型（当然包含子类）的异常就会转到500.jsp页面处理。 -->  
+    <error-page>   
+        <exception-type>java.lang.Exception</exception-type>   
+        <location>/pageError/exception</location>   
+    </error-page>   
+      
+    <error-page>   
+        <exception-type>java.lang.Throwable</exception-type>   
+        <location>/pageError/throwable</location>   
+    </error-page>  
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/classes/context-application.xml</param-value>
+	</context-param>
+
+	<context-param>
+		<param-name>sessionAttributeName</param-name>
+		<param-value>currentUser</param-value>
+	</context-param>
+
+	<filter>
+		<filter-name>characterEncodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+
+	<filter>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>characterEncodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<servlet-name>xdsoft</servlet-name>
+	</filter-mapping>
+
+	<!-- 防止发生java.beans.Introspector内存泄露,应将它配置在ContextLoaderListener的前面 -->
+	<!-- 详细描述见http://blog.csdn.net/jadyer/article/details/11991457 -->
+	<listener>
+		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+	</listener>
+
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<listener>
+		<listener-class>com.xdsoft.web.session.SessionListener</listener-class>
+	</listener>
+
+	<servlet>
+		<servlet-name>xdsoft</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/xdsoft-servlet.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/static/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>xdsoft</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+
+	<welcome-file-list>
+		<welcome-file>/</welcome-file>
+	</welcome-file-list>
+</web-app>

@@ -1,0 +1,40 @@
+body { padding-top: 70px; padding-bottom: 20px; }
+#user { padding: 10px 15px; }
+
+.user-list .col-md-3, .user-list .col-xs-2 { padding-left: 2px; padding-right: 2px; }
+.user-list { margin-left: -2px; margin-right: -2px; }
+.user-list .popover { width: 200px;}
+.user-list .thumbnail { margin-bottom: 10px;}
+
+.comment .popover {
+  position: relative;
+  display: block;
+  float: left;
+  width: 100%;
+  margin: 0 0 10px 0;
+  z-index: 1;
+  max-width: unset;
+}
+.comment .popover.right>.arrow {
+	top:42px;
+}
+
+#comment .comment-meta{
+	padding: 8px 0;
+}
+
+img.avatar{
+	border-radius: 50%;
+}
+
+.avatar-thumbnail{
+	border: none;
+	padding: 0;
+}
+.image_container {
+	width: auto;
+}
+
+.container .credit {
+	margin: 20px 0;
+}

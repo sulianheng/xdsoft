@@ -1,0 +1,27 @@
+.icon-preview-main {
+	display: table-cell;
+	text-align: center;
+	vertical-align: middle;
+	width: 160px;
+	height: 160px;
+	border: 2px solid #999;
+	border-radius: 30px;
+}
+
+.icon-preview-font {
+	font-size: 4.8em;
+}
+
+.table-icon-preview {
+	font-size: 1.2em;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.btn-style {
+	appearance: button;
+	-moz-appearance: button; /* Firefox */
+	-webkit-appearance: button; /* Safari and Chrome */
+}

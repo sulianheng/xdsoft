@@ -1,0 +1,414 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.ManagerMapper;
+import com.xdsoft.mvc.mapper.OrdersMapper;
+import com.xdsoft.mvc.mapper.PrintInfoMapper;
+import com.xdsoft.mvc.util.RandOrdernum;
+
+/**
+ * 订单管理
+ * 
+ * @author weiwei
+ * 
+ */
+
+@Service
+public class OrdersService {
+
+	@Resource
+	private OrdersMapper ordersMapper;
+
+	@Resource
+	private PrintInfoMapper printInfoMapper;
+
+	@Resource
+	private UserService userService;
+
+	@Resource
+	private RobOrderService robOrderService;
+
+	@Resource
+	private ManagerMapper managerMapper;
+
+	/*----------Orderlist生成----------------------*/
+
+	public Map<String, Object> CreateOrderList(Map<String, Object> user,
+			String recieve_name, String address_info_id, String dorm,
+			String tel, String sendtimes) {
+
+		// 判断用户是否登陆和随机订单码是否过期
+
+		if (user != null && user.containsKey("ordernum_id")) {
+			// 判断用户是否登陆
+			DecimalFormat df = new DecimalFormat("0.00");
+			if (user.containsKey("id")) {
+
+				// 判断用户是否使用了优惠券
+				if (user.containsKey("bonus")) {
+
+					Map<String, Object> calcresult = this.CalcPages(
+							user.get("ordernum_id").toString(),
+							user.get("bonus").toString());
+					// 判断用户优惠券抵扣的额度
+					int calc = Integer.parseInt(calcresult
+							.get("restBonusPages").toString());
+					if (calc >= 0) {
+						// 更新用户的优惠额度
+						robOrderService.updateBonusCount(
+								(Integer) user.get("id"), calc);
+						// 订单详细信息
+						// ordernum_id,tempuser_address_id,user_id,,bonus,payment,timestamp,order_state
+						this.InsertOrderList(
+								user.get("ordernum_id").toString(), "0", user
+										.get("id").toString(),
+								calcresult.get("PrintPages").toString(), "0");
+						// 优惠信息放到Session里
+						user.put("youhui", calcresult.get("PrintPages")
+								.toString());
+						user.put("price", 0);
+					} else {
+						// @Test
+						System.out.println(calc);
+						System.out.println(df.format(new Double(
+								(0 - calc) * 0.15)));
+						// 用户实际支付
+						String price = df.format(new Double((0 - calc - Integer
+								.parseInt(calcresult.get("copyPages")
+										.toString()))
+								* 0.15
+								+ Integer.parseInt(calcresult.get("copyPages")
+										.toString()) * 0.08));
+						// 更新用户优惠额度
+						robOrderService.updateBonusCount(
+								(Integer) user.get("id"), 0);
+						// 生成订单信息
+						this.InsertOrderList(
+								user.get("ordernum_id").toString(), "0", user
+										.get("id").toString(), user
+										.get("bonus").toString(), price);
+						// 优惠信息
+						user.put("youhui", user.get("bonus").toString());
+						user.put("price", price);
+
+					}
+					// 打印总页数
+					user.put("countpages", calcresult.get("PrintPages"));
+					// 移出Session里的优惠额度
+					user.remove("bonus");
+
+				} else {
+					// 计算总共打印的页数
+					Map<String, Object> calcresult = this.CalcPages(
+							user.get("ordernum_id").toString(), "0");
+					// 计算金额
+					String price = df.format(new Double((0 - Integer
+							.parseInt(calcresult.get("restBonusPages")
+									.toString()) - Integer.parseInt(calcresult
+							.get("copyPages").toString()))
+							* 0.15
+							+ Integer.parseInt(calcresult.get("copyPages")
+									.toString()) * 0.08));
+					// 用户未使用打印优惠
+					this.InsertOrderList(user.get("ordernum_id") + "", "0",
+							user.get("id").toString(), "0", price);
+					// 打印总页数
+					user.put("countpages", calcresult.get("PrintPages"));
+					// 用户实际支付
+					user.put("price", price);
+				}
+
+				userService.addUserAddressInfo(user.get("id").toString(),
+						recieve_name, address_info_id, dorm, tel);
+
+			} else {
+				// 计算页数
+				Map<String, Object> calcresult = CalcPages(
+						user.get("ordernum_id").toString(), "0");
+
+				String price = df.format(new Double(
+						(0 - Integer.parseInt(calcresult.get("restBonusPages")
+								.toString()) - Integer.parseInt(calcresult.get(
+								"copyPages").toString()))
+								* 0.15
+								+ Integer.parseInt(calcresult.get("copyPages")
+										.toString()) * 0.08));
+				// 创建临时用户信息
+				Map<String, Object> result = userService
+						.CreateTempUserInformation(
+								user.get("ordernum_id") + "", recieve_name,
+								tel, address_info_id, sendtimes, dorm);
+				System.out.println("result::::" + result);
+
+				// 生成订单信息
+				InsertOrderList(user.get("ordernum_id") + "", result.get("id")
+						.toString(), "0", "0", price);
+				// 打印总页数
+				user.put("countpages", calcresult.get("PrintPages"));
+				// 打印总价
+				user.put("price", price);
+			}
+
+			user.remove("ordernum_id");
+
+			System.out.print(user);
+			System.out.println("----------------");
+
+		} else {
+			user.put("err", "Zzz~订单过去的时间太长了。。。请重新上传文件获取订单信息！");
+		}
+
+		return user;
+	}
+
+	/**
+	 * 根据user_id获取订单信息
+	 * 
+	 * @param user_id
+	 * */
+	public List<Map<String, Object>> queryOrderInfoByUser_id(Object user_id) {
+		return ordersMapper.QueryOrderlistByUser_id(user_id);
+	}
+
+	// /** MangerPrintFileState 文件打印状态管理接口 */
+	// // 【改】
+	// /**
+	// * 根据表Randordernum 、TempFilesInformation表、 PrintInfo表信息综合
+	// *
+	// *
+	// * */
+	// public List<Map<String, Object>> ListAllNotPrintFile(int start, int
+	// limit) {
+	//
+	// Map<String, Object> temp = new HashMap<String, Object>();
+	// temp.put("start", start);
+	// temp.put("limit", limit);
+	//
+	// return managerMapper.QueryFilesAllInfo(temp);
+	//
+	// }
+
+	/**
+	 * 根据优惠页数以及打印页数计算
+	 * 
+	 * 
+	 */
+	public Map<String, Object> CalcPages(String Ordernum, String bonus) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		List<Map<String, Object>> info = managerMapper
+				.CountPrintFilesInfo(Ordernum);
+		int calcAllPages = 0;
+		int copyPages = 0;
+		for (Map<String, Object> m : info) {
+			calcAllPages = Integer.parseInt(m.get("filepages").toString())
+					* Integer.parseInt(m.get("copies").toString())
+					+ calcAllPages;
+			copyPages = Integer.parseInt(m.get("filepages").toString())
+					* (Integer.parseInt(m.get("copies").toString()) - 1)
+					+ copyPages;
+		}
+		System.out.println("本次打印总页数" + calcAllPages);
+		result.put("restBonusPages", Integer.parseInt(bonus) - calcAllPages);
+		result.put("PrintPages", calcAllPages);
+		if (Integer.parseInt(bonus) > copyPages)
+			result.put("copyPages", 0);
+		else
+			result.put("copyPages", copyPages - Integer.parseInt(bonus));
+
+		return result;
+
+	}
+
+	/** RandOrdernum表操作 */
+	// 【改】
+	/**
+	 * 获取一条订单号
+	 * 
+	 * @return orderlistnum
+	 */
+	public String GetOrderListNum() {
+		Map<String, Object> rand = new HashMap<String, Object>();
+		String ordernum = RandOrdernum.getOrderNo();
+		rand.put("ordernum", ordernum);
+		rand.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		ordersMapper.CreateRandOrdernum(rand);
+		return this.GetOrderUID(ordernum);
+
+	}
+
+	/**
+	 * 获取订单ID
+	 * 
+	 * @return OrderUID
+	 */
+	public String GetOrderUID(String OrderNum) {
+		Map<String, Object> order = ordersMapper
+				.queryRandOrdernumByOrdernum(OrderNum);
+
+		return order.get("id").toString();
+
+	}
+
+	/** TempFilesInformation */
+	// 【改】
+
+	/**
+	 * 插入一条临时文件记录
+	 * 
+	 * @return MAP<String,Object> TempFileInformation
+	 * 
+	 *         ordernum_id,filename,tempfilelocal,timestamp,fileunique
+	 * 
+	 */
+
+	// ordernum_id,filename,tempfilelocal,timestamp,fileunique
+	public Map<String, Object> CreateTempFileInfomation(String ordernum_id,
+			String filename, String tempfilelocal, String fileunique) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("ordernum_id", ordernum_id);
+		temp.put("filename", filename);
+		temp.put("tempfilelocal", tempfilelocal);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		temp.put("fileunique", fileunique);
+		System.out.println(temp);
+
+		int success = ordersMapper.CreateTempFiles(temp);
+		if (success == 1) {
+			temp.put("id", this.TempFilesQueryByFileUnique(temp));
+			return temp;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 获取TempFileInformationID
+	 * 
+	 * @return int uid
+	 * 
+	 */
+	public int TempFilesQueryByFileUnique(Map<String, Object> temp) {
+
+		Map<String, Object> templ = ordersMapper
+				.TempFilesQueryByFileUnique(temp);
+
+		return (Integer) templ.get("id");
+
+	}
+
+	/**
+	 * 根据文件id查询文件信息
+	 * 
+	 */
+	public Map<String, Object> TempFilesQueryByID(int id) {
+		return ordersMapper.TempFilesQueryByOrdernumid(id);
+	}
+
+	/** OrderList表操作，生成订单信息 */
+	// 【改】
+	/**
+	 * 生成订单<InsertOrderList>
+	 * 
+	 * @参数说明 bonus:优惠券优惠页数、payment：用户实际需要支付的金额、
+	 *       paystatue：本单的支付信息、paytimestamp:支付时间未申请下支付宝接口暂时为空、
+	 *       tempuserinformationuid:临时用户的用户信息ID，若为0则该用户为注册用户、
+	 *       useruid：注册用户信息ID，若为0则该用户为临时用户
+	 * 
+	 */
+	public Map<String, Object> InsertOrderList(String ordernum_id,
+			String tempuser_address_id, String user_id, String bonus,
+			String payment) {
+		// ordernum_id,tempuser_address_id,user_id,paystate,paytimestamp,bonus,payment,timestamp,order_state
+		// ordernum_id,tempuser_address_id,user_id,paystate,paytimestamp,bonus,payment,timestamp,order_state
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("ordernum_id", ordernum_id);
+		temp.put("tempuser_address_id", tempuser_address_id);
+		temp.put("user_id", user_id);
+		temp.put("paystate", 0);
+		temp.put("bonus", bonus);
+		temp.put("payment", payment);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		temp.put("order_state", 0);
+		if (ordersMapper.CreateOrderList(temp) == 1)
+			return temp;
+		else {
+			Map<String, Object> err = new HashMap<String, Object>();
+			err.put("errinfo", "数据库操作出错！");
+			return err;
+		}
+
+	}
+
+	/** 页数统计操作 */
+
+	/** PrintInfo文件打印设置表 */
+
+	/***
+	 * 文件打印信息
+	 * 
+	 * tempfile_id,filepages,option1,option2,copies,timestamp
+	 * 
+	 * @return Map<String,Object> printinfo
+	 */
+	public Map<String, Object> addPrintInfo(String tempfile_id,
+			String filepages, String option1, String option2, String copies) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("tempfile_id", tempfile_id);
+		temp.put("filepages", filepages);
+		temp.put("option1", option1);
+		temp.put("option2", option2);
+		temp.put("copies", copies);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+
+		int success = printInfoMapper.addPrintInfo(temp);
+		if (success == 1) {
+
+		}
+
+		return temp;
+
+	}
+
+	/**
+	 * 根据UID查询文件打印信息
+	 * 
+	 * @return Map<String,Object> fileinformation
+	 * 
+	 */
+	public Map<String, Object> QueryPrintInfoByTempfileid(String tempfileid) {
+
+		return printInfoMapper.QueryPrintInfoByTempfileid(tempfileid);
+
+	}
+
+	/**
+	 * 文库文件打印 bunko_file_id,ordernum_id,option1,option2,copies,timestamp
+	 */
+	public Map<String, Object> AddBunkoFilePrintInfo(String bunko_file_id,
+			String ordernum_id, String option1, String option2, String copies) {
+
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("bunko_file_id", bunko_file_id);
+		temp.put("ordernum_id", ordernum_id);
+		temp.put("option1", option1);
+		temp.put("option2", option2);
+		temp.put("copies", copies);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		int success = printInfoMapper.AddBunkoFilePrintInfo(temp);
+		if (success == 1)
+			return temp;
+		else {
+			temp.clear();
+			temp.put("err", "数据操作失败");
+			return temp;
+		}
+	}
+}

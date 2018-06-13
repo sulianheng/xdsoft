@@ -1,0 +1,160 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.ManagerMapper;
+import com.xdsoft.mvc.mapper.OrdersMapper;
+import com.xdsoft.mvc.mapper.UserMapper;
+import com.xdsoft.mvc.tools.PageTool;
+import com.xdsoft.secure.SecureUtils;
+/**
+ * 
+ * 
+ */
+
+
+@Service
+public class ManagerService {
+
+	@Resource
+	private OrdersMapper ordersMapper;
+	@Resource
+	private ManagerMapper managerMapper;
+	@Resource
+	private UserMapper userMapper;
+	@Resource
+	private UserService userService;
+	
+//	/**
+//	 *   需要打印的文件信息接口
+//	 * 
+//	 * 
+//	 */
+//	public List<Map<String,Object>> QueryAllNoPrintFilesInfo(String start,String limit){
+//		Map<String,Object> temp = new HashMap<String,Object>();
+//		temp.put("start", start);
+//		temp.put("limit", limit);
+//		return managerMapper.QueryAllNoPrintFilesInfo(temp);
+//	}
+	
+	/**
+	 * 添加管理员
+	 * @param unique
+	 * */
+	public int addAdmin(String unique,String author){
+		Map<String, Object> user = managerMapper.searchUserByUnique(unique);
+		if(user != null){
+			Map<String, Object> user_author = new HashMap<String, Object>();
+			user_author.put("user_id", user.get("id"));
+			user_author.put("author", author);
+			user_author.put("timestamp", new Timestamp(System.currentTimeMillis()));
+			if(userMapper.CheckAuthor(user.get("id")) == null){
+				if(managerMapper.insertUserAuth(user_author) > 0){
+					return 1;
+				}
+			}
+		}
+		return 0;
+	}
+	/**
+	 * 模糊查询用户根据输入的内容,匹配username或email
+	 * */
+	public List<Map<String, Object>> searchUser(String content){
+		return managerMapper.searchUser(content);
+	}
+	
+	/**
+	 * 处理登陆
+	 * */
+	public Map<String, Object> verifylogin(String unique,String password){
+		Map<String, Object> user = userService.queryByUnique(unique);
+
+		if (user == null) {
+			return null;
+		} else {
+			Map<String, Object> ue = userService.queryExtendByUserid(user.get("id")); // 获取用户扩展信息
+			user.put("nickname", ue.get("nickname"));
+			String salt = (String) user.get("salt");
+			String encryptPassword = SecureUtils.encrypt(password, salt);
+
+			if (encryptPassword != null
+					&& encryptPassword.equals(user.get("password"))) {
+				Map<String, Object> author = userMapper.CheckAuthor(user.get("id"));
+				if(author != null){
+					user.put("lastlogin", new Timestamp(System.currentTimeMillis()));
+					userMapper.updateLastLoginTime(user);
+					user.put("author", author.get("author"));
+					UserService.fixUser(user);
+					return user;
+				} else{
+					return null;
+				}
+				
+			} else {
+				return null;
+			}
+		}
+
+	}
+
+	/**
+	 * 获取所用订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllOrderDetail(String strat_page,String rows,String state) {
+		Map<String , Object> page = PageTool.getStartAndEndLimit(strat_page, rows);
+		page.put("state", state);
+		return managerMapper.QueryAllOrderDetail(page);
+	}
+
+	/**
+	 * 获取所用未完成订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllUnfinishedOrderDetail() {
+		return managerMapper.QueryAllUnfinishedOrder();
+	}
+
+	/**
+	 * 获取所用未完成订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllFinishedOrderDetail() {
+		return managerMapper.QueryAllFinishedOrder();
+	}
+
+	/**
+	 * 获取超过三天的订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryTimeoutOrderDetail() {
+		return managerMapper.QueryTimeoutOrder();
+	}
+	
+	/**
+	 * 核对用户权限
+	 * */
+	public Map<String, Object> query_author(String user_id){
+		return userMapper.CheckAuthor(user_id);
+	}
+	
+}

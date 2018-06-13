@@ -1,0 +1,14 @@
+package com.xdsoft.mvc.tools;
+
+import java.util.Calendar;
+import java.util.Date;
+
+public class DateTool {
+    public static Date getLastActivateTime(Date sendTime) {
+        Calendar cl = Calendar.getInstance();
+        cl.setTime(sendTime);
+        cl.add(Calendar.DATE , 1);
+
+        return cl.getTime();
+    }
+}

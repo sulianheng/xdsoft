@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.UserMapper">
+	<!-- 登陆查询 -->
+	<select id="queryByUnique" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from user u where
+		u.username= #{unique} or u.email
+		= #{unique}
+	</select>
+	<!-- 注册新用户 -->
+	<insert id="insertUser" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		user(email,username,password,salt,joinat,lastlogin)
+		values(#{email},#{username},#{password},#{salt},#{joinat},#{lastlogin})
+	</insert>
+	<!-- 更新最后一次登陆时间 -->
+	<update id="updateLastLoginTime" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		update user set
+		lastlogin =
+		#{lastlogin}
+		where id = #{id}
+	</update>
+	<!-- 修改记录(头像) -->
+	<update id="updateAvatar" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		update user set
+		<if test="avatar!=null and avatar!='' ">
+			avatar = #{avatar}
+		</if>
+		where id = #{id}
+	</update>
+	<!-- 通过邮箱修改密码 -->
+	<update id="updatePasswordByEmail" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		update user set
+		password =
+		#{password},salt=#{salt}
+		where email = #{email}
+	</update>
+	<!-- 更改密保 -->
+	<update id="updatePasswdProtect" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		update user set
+		sq = #{sq},answer=#{answer}
+		where id = #{id}
+	</update>
+	<!--user_extend 表操作 -->
+
+	<!-- 查询用户扩展信息 -->
+	<select id="queryExtendByUserid" parameterType="Object"
+		resultType="java.util.Map">
+		select *
+		from user_extend u where
+		u.user_id= #{user_id}
+	</select>
+
+	<!-- 新增用户扩展信息记录 -->
+	<insert id="insertUserExtend" parameterType="Object"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into user_extend(user_id)
+		values(#{user_id})
+	</insert>
+
+	<!-- 修改用户扩展信息 -->
+	<update id="updateUseExtend" parameterType="java.util.Map">
+		update user_extend set
+		<if test="signature!=null  and signature!=''">
+			signature = #{signature}
+		</if>
+		<if test="nickname!=null  and nickname!=''">
+			,nickname = #{nickname}
+		</if>
+		<if test="hobby!=null  and hobby!=''">
+			,hobby = #{hobby}
+		</if>
+		<if test="qq!=null  and qq!=''">
+			,qq = #{qq}
+		</if>
+		<if test="tel!=null  and tel!=''">
+			,tel = #{tel}
+		</if>
+		<if test="sex!=null  and sex!=''">
+			,sex = #{sex}
+		</if>
+		<if test="grade!=null  and grade!=''">
+			,grade = #{grade}
+		</if>
+		where user_id = #{user_id}
+	</update>
+
+	<!--user_validateCode table option -->
+
+	<!-- 查询用户验证信息 -->
+	<select id="queryUserValidateCodeByUserid" parameterType="Object"
+		resultType="java.util.Map">
+		select *
+		from user_validateCode u where
+		u.user_id= #{user_id}
+	</select>
+	<!-- 插入用户验证信息 -->
+	<insert id="insertUserValidateCode" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		user_validateCode(user_id,validateCode,timestamp)
+		values(#{user_id},#{validateCode},#{timestamp})
+	</insert>
+
+	<update id="updateUserValidateCode" parameterType="java.util.Map">
+		update
+		user_validateCode set
+		validateCode = #{validateCode} ,timestamp =
+		#{timestamp}
+		where user_id = #{user_id}
+	</update>
+
+	<!--user_option table option -->
+	<select id="queryUserOption" parameterType="Object" resultType="java.util.Map">
+		select *
+		from user_option u where
+		u.user_id= #{user_id}
+	</select>
+	<!-- 插入用户验证信息 -->
+	<insert id="insertUserOption" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		user_option(user_id,action,timestamp)
+		values(#{user_id},#{action},#{timestamp})
+	</insert>
+
+
+	<!-- sq 表操作 -->
+
+	<!-- 查询sq表的密保问题，返回所有 -->
+	<select id="queryAllSq" resultType="java.util.Map">
+		select * from sq
+	</select>
+
+	<!-- user_author table option -->
+	<select id="CheckAuthor" parameterType="Object" resultType="java.util.Map">
+		select * from user_author where user_id = #{user_id}
+	</select>
+
+
+
+	<!-- TempUserInfo -->
+
+	<!-- 新增记录 -->
+	<!-- use_state 是否为默认收获地址 -->
+	<insert id="CreateTempUserinfo" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="uid">
+		insert into
+		tempuser_address(ordernum_id,recieve_name,tel,address_info_id,sendtime,use_state,dorm,timestamp)
+		values(#{ordernum_id},#{recieve_name},#{tel},#{address_info_id},#{sendtime},#{use_state},#{dorm},#{timestamp})
+	</insert>
+
+	<!-- 根据UID查询临时用户信息 -->
+	<select id="TempUserInfoQueryByid" parameterType="int"
+		resultType="java.util.Map">
+		select * from tempuser_address t
+		where t.id=#{id}
+	</select>
+
+	<!-- 根据电话号查询临时用户信息 -->
+	<select id="TempUserInfoQueryByTEL" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from tempuser_address t
+		where t.tel=#{tel}
+	</select>
+
+
+	<!-- 根据RandID查询临时用户信息 -->
+	<select id="TempUserInfoQueryByOrdernumID" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from tempuser_address t
+		where
+		t.ordernum_id=#{ordernum_id}
+	</select>
+	
+	
+	<select id="querycreator"  parameterType="int"
+	resultType="String">
+	select username 
+	from user
+	where id=#{id}
+	</select>
+	
+
+</mapper>  

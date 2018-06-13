@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.PrintInfoMapper">
+
+	<!-- 新增记录 -->
+	<insert id="addPrintInfo" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		printinfo(tempfileuid,filepages,printoption1,
+		printoption2,copies,timestamp,printstate)
+		values(#{tempfileuid},#{filepages},#{printoption1}, #{printoption2},
+		#{copies},#{timestamp},#{printstate})
+	</insert>
+
+	<!--根据Ordernum查询唯一标识的UUID -->
+	<select id="queryPrintInfoByTempfileuid" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from printinfo p
+		where p.tempfileuid =
+		#{tempfileuid}
+	</select>
+
+	<!--根据Ordernum查询唯一标识的UUID -->
+	<select id="queryPrintInfoByPrintState" parameterType="int"
+		resultType="java.util.Map">
+		select * from printinfo p
+		where p.printstate = #{printstate}
+		order by p.timestamp asc
+	</select>
+
+	<!-- 更新文件打印状态 -->
+	<update id="updatePrintState" parameterType="java.util.Map">
+		update printinfo set
+		printstate=#{printstate}
+		where uid=#{uid}
+	</update>
+
+</mapper>  

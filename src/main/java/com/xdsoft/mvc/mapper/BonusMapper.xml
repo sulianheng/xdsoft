@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.BonusDao">
+
+	<!--查询用户抢单优惠的整条记录 -->
+	<select id="queryByUser_id" parameterType="Object" resultType="java.util.Map">
+		select * from bonus b where b.user_id= #{user_id}
+	</select>
+	<!-- 更改用户优惠张数 和 timestamp(下单) -->
+	<update id="updateBonusCount" parameterType="java.util.Map"
+		flushCache="true">
+		update bonus
+		set bonus_total = #{bonus_total}
+		where
+		user_id =
+		#{user_id}
+	</update>
+
+	<!-- 更改用户优惠张数 和 timestamp(抢单) -->
+	<update id="updateBonusCount_Timestamp" parameterType="java.util.Map"
+		flushCache="true">
+		update bonus
+		set bonus_total = #{bonus_total} , timestamp =
+		#{timestamp}
+		where
+		user_id = #{user_id}
+	</update>
+
+	<!-- 更改用户优惠码 -->
+	<update id="updateBonusCode" parameterType="java.util.Map"
+		flushCache="true">
+		update bonus
+		set bonus_code = #{bonus_code}
+		where
+		user_id = #{user_id}
+	</update>
+
+	<!-- 新增用户记录 -->
+	<insert id="insertUser" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		bonus(user_id,bonus_total)
+		values(#{user_id},#{bonus_total})
+	</insert>
+
+
+	<!-- Bonus_record table option -->
+
+
+	<!--通过用户user_id查询优惠每次抢单记录 -->
+	<select id="queryRecordByuser_id" parameterType="Object" resultType="java.util.Map">
+		select * from
+		bonus_record b where b.user_id= #{user_id}
+	</select>
+	<!-- 新增用户记录 -->
+	<insert id="insertUserRecord" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		bonus_record(bonus_id,user_id,bonus_size,timestamp)
+		values(#{bonus_id},#{user_id},#{bonus_size},#{timestamp})
+	</insert>
+
+</mapper>

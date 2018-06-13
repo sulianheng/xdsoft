@@ -1,0 +1,224 @@
+package com.xdsoft.mvc.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.xdsoft.mvc.service.BunkoServise;
+import com.xdsoft.mvc.service.FilesSaveService;
+import com.xdsoft.mvc.service.OrdersService;
+import com.xdsoft.mvc.service.TransformService;
+import com.xdsoft.mvc.util.AuthUtils;
+import com.xdsoft.mvc.util.TransformUtil;
+import com.xdsoft.web.framework.annotation.PublicPage;
+import com.xdsoft.web.session.SessionUtils;
+
+
+
+@Controller
+@RequestMapping(value="/bunko")
+public class BunkoController {
+
+	/*
+	 *    解决方法：  http://bbs.csdn.net/topics/390506550
+	 * 
+	 */
+	@Resource
+	private FilesSaveService filesSaveService;
+
+	@Resource
+	private OrdersService ordersService;
+	
+	@Resource
+	private AuthUtils authUtils;
+	
+	@Resource
+	private TransformUtil transformUtils;
+	
+	@Resource
+	private TransformService ts;
+	
+	@Resource
+	private BunkoServise bunkoservise;
+	
+	
+	@PublicPage
+	@RequestMapping
+	public String bunkoshow(HttpServletRequest request)
+	{
+		return "bunkos/bunkomain";
+		
+	}
+	
+	
+	@PublicPage
+	@RequestMapping(value="/upload")
+	public String bunkotoupload(HttpServletRequest request)
+	{
+		return "bunkos/bunkoupload";
+		
+	}
+	
+	
+	
+	@PublicPage
+	@RequestMapping(value="/online")
+	public String bunkoShowOnline(HttpServletRequest request)
+	{
+		return "bunkos/bunkoOnlineUp";
+	}
+	
+	
+//	?{file:\\w+}
+//	@RequestParam String file, 
+//	@PublicPage
+//	@RequestMapping(value="/bunkofile/{file:\\w+}")
+//	public String bunko(HttpServletRequest request,HttpServletResponse response,@PathVariable String file)
+//	{
+//		String target1 = "http://localhost:8080/xdsoft/Uploadswf/"+ file + ".swf";
+//		String file = request.getParameter("file");
+	//		System.out.println("__-------___"+target1);
+//		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaa");
+//		request.setAttribute("file1", target1); 
+//		return "bunkos/bunkoFshow";
+//		
+//	}
+//	
+//	,method = RequestMethod.POST            ,@RequestParam("file") MultipartFile[] files
+	
+	
+	@RequestMapping(value="/onlineupload")
+	public void toupload(HttpServletResponse response,HttpServletRequest request)throws IOException 
+	{
+		
+		boolean iflogin = bunkoservise.iflogin(request);
+		if(iflogin)
+		{
+			response.sendRedirect(request.getContextPath() + "/bunko/upload");
+			
+		}
+		else
+			response.sendRedirect(request.getContextPath() + "/login");
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	@RequestMapping(value="/onlineupload",method = RequestMethod.POST)
+	public String onlineRead(HttpServletResponse response,HttpServletRequest request,@RequestParam("file") MultipartFile files)throws IOException 
+	{
+		
+		
+		String filename = files.getOriginalFilename();
+		if(bunkoservise.ifexitfile(filename))
+		{
+			return "bunkos/error";
+		}
+		String file = ts.transform(files, request);
+		System.out.println(request.getContextPath() + "/bunko/bunkofile/" + file);
+		String target1 = "http://localhost:8080/xdsoft/Uploadswf/"+ file + ".swf";
+		request.setAttribute("file1", target1); 
+		return "bunkos/bunkoFshow";
+		
+	}
+	
+	//在线预览文件跳转控制
+	@RequestMapping(value="/onlineseo",method = RequestMethod.POST)
+	public String onlineSeo(HttpServletResponse response,HttpServletRequest request,@RequestParam("fileid") String fileid,@RequestParam("findfile") String findfile)throws IOException 
+	{
+		
+		Map<String, Object> filelist = bunkoservise.getinfoByonline(fileid);
+		
+		String file1 = (String) filelist.get("fileunique");
+		//收藏权限的判断
+	//	boolean userroot = bunkoservise.getuserreadRoot(request, fileid);
+		System.out.println(findfile);
+		//匹配
+		List<Map<String, Object>> fileslist = null;
+		
+		fileslist = bunkoservise.findBymatchfilename(findfile);
+		//封装三个匹配到的预览文件不同于现有的预览文件
+
+		List<Map<String, Object>> listfile = bunkoservise.seofilefromallfile(fileslist, fileid);
+		System.out.println("封装的三个：" + listfile);
+		request.setAttribute("listfile", listfile);
+		request.setAttribute("findfile", findfile);
+		String target1 = "http://localhost:8080/xdsoft/Uploadswf/"+ file1 + ".swf";
+		request.setAttribute("file1", target1); 
+		return "bunkos/bunkoFshow";
+		
+	}
+	
+	
+	
+	
+	@PublicPage
+	@RequestMapping(value="/seomain")
+	public String seoMain(HttpServletRequest request)
+	{
+		return "bunkos/findtest";
+		
+	}
+	
+	@PublicPage
+	@RequestMapping(value="/seo",method=RequestMethod.POST)
+	public String seoBymatchfilename(HttpServletResponse response, HttpServletRequest request,@RequestParam("findfile") String findfile) throws IOException
+	{
+		
+		System.out.println(findfile);
+		
+		if(findfile == null ||  findfile.isEmpty())
+		{
+			request.setAttribute("message", "搜索为空");
+			response.sendRedirect(request.getContextPath() + "/bunko");
+		
+		}
+//		else
+//		{
+			
+			List<Map<String, Object>> fileslist = null;
+			
+			fileslist = bunkoservise.findBymatchfilename(findfile);
+			
+			System.out.println(fileslist);
+			
+			request.setAttribute("listfile", fileslist);
+			request.setAttribute("findfile", findfile);
+			if(fileslist == null)
+			{
+				System.out.println("结果为空");
+			}
+			
+			return "bunkos/detailshow";
+			
+
+//		}
+		
+	}
+	
+	
+	
+	
+}

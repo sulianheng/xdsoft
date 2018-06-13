@@ -1,0 +1,176 @@
+package com.xdsoft.mvc.service;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+import org.springframework.stereotype.Service;
+
+import com.jacob.activeX.ActiveXComponent;
+import com.jacob.com.ComThread;
+import com.jacob.com.Dispatch;
+import com.jacob.com.Variant;
+import com.sun.pdfview.PDFFile;
+
+@Service
+public class CountPageService {
+
+	public CountPageService() {
+	}
+
+	// 声明一个静态的类实例化对象
+	private static CountPageService instance;
+	// 声明word文档对象
+	private Dispatch doc = null;
+	// 声明word文档当前活动视窗对象
+	private Dispatch activeWindow = null;
+	// 声明word文档选定区域或插入点对象
+	private Dispatch docSelection = null;
+	// 声明所有word文档集合对象
+	private Dispatch wrdDocs = null;
+	// 声明word文档名称对象
+	private String fileName;
+	// 声明ActiveX组件对象：word.Application,Excel.Application,Powerpoint.Application等等
+	private ActiveXComponent wrdCom;
+
+	/**
+	 * 获取Word操作静态实例对象
+	 * 
+	 * @return 报表汇总业务操作
+	 */
+	public final static synchronized CountPageService getInstance() {
+		if (instance == null)
+			instance = new CountPageService();
+		return instance;
+	}
+
+	/**
+	 * 初始化Word对象
+	 * 
+	 * @return 是否初始化成功
+	 */
+	public boolean initWordObj() {
+		boolean retFlag = false;
+		ComThread.InitSTA();// 初始化com的线程，非常重要！！使用结束后要调用 realease方法
+		wrdCom = new ActiveXComponent("Word.Application");// 实例化ActiveX组件对象：对word进行操作
+		try {
+			/*
+			 * 返回wrdCom.Documents的Dispatch
+			 * 获取Dispatch的Documents对象，可以把每个Dispatch对象看成是对Activex控件的一个操作
+			 * 这一步是获得该ActiveX控件的控制权。
+			 */
+			wrdDocs = wrdCom.getProperty("Documents").toDispatch();
+			// 设置打开的word应用程序是否可见
+			wrdCom.setProperty("Visible", new Variant(false));
+			retFlag = true;
+		} catch (Exception e) {
+			retFlag = false;
+			e.printStackTrace();
+		}
+		return retFlag;
+	}
+
+	/**
+	 * 取得活动窗体对象
+	 * 
+	 */
+	public void getActiveWindow() {
+		// 获得活动窗体对象
+		activeWindow = wrdCom.getProperty("ActiveWindow").toDispatch();
+	}
+
+	/**
+	 * 打开一个已存在的文档
+	 * 
+	 * @param docPath
+	 */
+	public void openDocument(String docPath) {
+		if (this.doc != null) {
+			this.closeDocument();
+		}
+		this.doc = Dispatch.call(wrdDocs, "Open", docPath).toDispatch();
+		this.docSelection = Dispatch.get(wrdCom, "Selection").toDispatch();
+	}
+
+	/**
+	 * 关闭当前word文档
+	 * 
+	 */
+	public void closeDocument() {
+		if (this.doc != null) {
+			Dispatch.call(this.doc, "Save");
+			Dispatch.call(this.doc, "Close", new Variant(true));
+			this.doc = null;
+		}
+	}
+
+	/**
+	 * 关闭Word资源
+	 * 
+	 * 
+	 */
+	public void closeWordObj() {
+		// 关闭word文件
+		wrdCom.invoke("Quit", new Variant[] {});
+		// 释放com线程。根据jacob的帮助文档，com的线程回收不由java的垃圾回收器处理
+		ComThread.Release();
+	}
+
+	/** 自动识别文件类型 可统计类型：*.doc、*.docx、 *.txt、 *.PDF */
+	public String CountPage(String wordPath) throws IOException {
+		String suffix = wordPath.substring(wordPath.lastIndexOf(".") );
+		System.out.println(suffix);
+		if (suffix.equals(".doc") || suffix.equals(".docx")
+				|| suffix.equals(".txt"))
+			return this.CountWordPage(wordPath);
+		else
+			return this.CountPDFPage(wordPath);
+	}
+
+	/**
+	 * PDF页数统计
+	 * 
+	 */
+	public String CountPDFPage(String path) throws IOException {
+		File file = new File(path);
+		RandomAccessFile raf = new RandomAccessFile(file, "r");
+		FileChannel channel = raf.getChannel();
+		ByteBuffer buf = channel.map(FileChannel.MapMode.READ_ONLY, 0,
+				channel.size());
+		PDFFile pdffile = new PDFFile(buf);
+		channel.close();
+		raf.close();
+
+		return pdffile.getNumPages() + "";
+	}
+
+	/**
+	 * Word文档类统计 *.doc、*.docx、*.txt等
+	 * 
+	 * 
+	 */
+	public String CountWordPage(String path) {
+		try {
+			if (initWordObj()) {
+				openDocument(path);
+				getActiveWindow();
+				// 用于指定位置MoveRight以及MoveDown
+				Dispatch selection = Dispatch.get(wrdCom, "Selection")
+						.toDispatch();
+				String pcnt = Dispatch.call(selection, "information", 4)
+						.toString();
+				closeDocument();
+				closeWordObj();
+				return pcnt;
+			} else
+				return "false";
+		} catch (Exception e) {
+			e.printStackTrace();
+			closeDocument();
+			closeWordObj();
+			return e.toString();
+		}
+	}
+}

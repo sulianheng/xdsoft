@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.OrdersMapper">
+
+
+	<!--RandUUid -->
+	<!--生成一个唯一串并放入数据库 -->
+	<insert id="CreateRandOrdernum" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		randordernum(ordernum,timestamp)
+		values(#{ordernum},#{timestamp})
+	</insert>
+
+	<!--根据Ordernum查询唯一标识的UUID -->
+	<select id="queryRandOrdernumByOrdernum" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from randordernum r
+		where r.ordernum = #{ordernum}
+	</select>
+
+	<!--根据uid查询唯一标识的UUID -->
+	<select id="queryRandOrdernumByID" parameterType="int"
+		resultType="java.util.Map">
+		select * from randordernum r
+		where r.id = #{id}
+	</select>
+
+	<!--根据uid删除已存在的UUID -->
+	<delete id="deleteRandOrdernum" parameterType="int">
+		delete from
+		randordernum where id = #{id}
+	</delete>
+
+	<!-- 返回UUID表的所有数据按照时间降序 -->
+	<select id="queryAllRandOrdernum" resultType="java.util.Map">
+		select * from
+		randordernum r
+		order by r.timestamp asc
+	</select>
+
+
+	<!--TempFiles -->
+	<!--插入一个文件数据 -->
+	<insert id="CreateTempFiles" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="uid">
+		insert into
+		tempfile(ordernum_id,filename,tempfilelocal,timestamp,fileunique)
+		values(#{ordernum_id},#{filename},#{tempfilelocal},#{timestamp},#{fileunique})
+	</insert>
+
+	<!--根据FileUnique值查询文件信息 -->
+	<select id="TempFilesQueryByFileUnique" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.fileunique = #{fileunique}
+	</select>
+
+	<!--根据Timestamp值查询文件信息 -->
+	<select id="TempFilesQueryByTimestamp" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.timestamp = #{timestamp}
+	</select>
+
+
+	<!--根据RandUID值查询文件信息 -->
+	<select id="TempFilesQueryByOrdernumid" parameterType="int"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.ordernum_id =
+		#{ordernum_id}
+	</select>
+
+	<select id="TempFilesQueryByID" parameterType="int" resultType="java.util.Map">
+		select * from tempfile t
+		where t.id = #{id}
+	</select>
+
+	<!-- 返回UUID表的所有数据按照时间降序 -->
+	<select id="queryAllTempFiles" resultType="java.util.Map">
+		select * from tempfile
+		r
+		order by r.timestamp asc
+	</select>
+
+
+
+	<!--OrderList -->
+	<!-- 新订单 -->
+	<insert id="CreateOrderList" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		orderlist(ordernum_id,tempuser_address_id,user_id,paystate,paytimestamp,bonus,payment,timestamp,order_state)
+		values(#{ordernum_id},#{tempuser_address_id},#{user_id},#{paystatue},#{paytimestamp,jdbcType=TIMESTAMP},#{bonus},#{payment},#{timestamp},#{order_state})
+	</insert>
+
+	<select id="QueryOrderlistByID" parameterType="int" resultType="java.util.Map">
+		select * from orderlist o
+		where o.id = #{id}
+	</select>
+
+	<select id="QueryOrderlistByRandID" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select
+		* from orderlist o
+		where o.randordernum =
+		#{randordernumid}
+	</select>
+
+	<select id="QueryOrderlistByUser_id" parameterType="Object" resultType="java.util.Map">
+		select * from orderlist o inner join randordernum r on o.ordernum_id = r.id
+		where o.user_id = #{user_id}
+	</select>
+
+
+	
+
+
+
+</mapper>  

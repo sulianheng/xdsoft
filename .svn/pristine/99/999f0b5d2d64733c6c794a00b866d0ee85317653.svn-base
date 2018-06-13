@@ -1,0 +1,44 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+<title>文库搜索</title>
+
+<style type="text/css">
+#input {
+	margin-left: 180px;
+	margin-right: 180px;
+}
+
+.img {
+	text-align: center;
+}
+</style>
+
+<div class="container">
+	<form action="" method="post">
+		<div class="img">
+			<img src="<%=basePath %>photos/bunko_search_logo.png">
+		</div>
+		<div class="input-group input-group-lg" id="input">
+			<input id="findfile" name="findfile"type="text" class="form-control"
+				placeholder="Search what you want..."
+				aria-describedby="sizing-addon1"> <span
+				class="input-group-addon btn btn-primary" id="sizing-addon1">Search</span>
+		</div>
+	</form>
+</div>
+<<script type="text/javascript">
+	$("#sizing-addon1").bind("click",function(){
+		$.post("<%=basePath%>bunko/seo",{
+			findfile:$('#findfile').val()
+		}, function(data, status) {
+			alert("Data: " + data + "\nStatus: " + status);
+		});
+
+	});
+</script>

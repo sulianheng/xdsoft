@@ -1,0 +1,368 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.UserMapper;
+import com.xdsoft.mvc.mapper.User_AddressMapper;
+import com.xdsoft.mvc.service.exception.UserExsitsException;
+import com.xdsoft.secure.SecureUtils;
+
+/**
+ * 用户
+ * 
+ * @author reyenxu
+ * 
+ */
+
+@Service
+public class UserService {
+
+	@Resource
+	private UserMapper userMapper;
+
+	@Resource
+	private User_AddressMapper user_AddressMapper;
+
+	@Resource
+	private BaseinformationService baseinformationService;
+
+	/**
+	 * 注册
+	 * 
+	 * @param email
+	 *            , username, password, salt, join_at
+	 * @param 邮箱
+	 *            、用户名、密码、盐值、注册日期
+	 * @return
+	 * @throws UserExsitsException
+	 */
+	public Map<String, Object> register(String email, String username,
+			String password) throws UserExsitsException {
+		if (queryByUnique(email) != null || queryByUnique(username) != null) {
+			throw new UserExsitsException();
+		}
+
+		Map<String, Object> salt = new HashMap<String, Object>();
+		salt.put("object", password);
+
+		if (!SecureUtils.encryptPassword(salt)) {
+			return null;
+		}
+
+		Map<String, Object> user = new HashMap<String, Object>();
+		user.put("email", email);
+		user.put("username", username);
+		user.put("password", salt.get("objectBysalt"));
+		user.put("salt", salt.get("salt"));
+		user.put("joinat", new Timestamp(System.currentTimeMillis()));
+		user.put("lastlogin", new Timestamp(System.currentTimeMillis()));
+
+		int success = userMapper.insertUser(user);
+		Object user_id = user.get("id");
+
+		insertUseExtend(user_id);// 建立用户扩展信息记录
+
+		if (success == 1) {
+			fixUser(user);
+			return user;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 验证用户登录
+	 * 
+	 * @param unique
+	 *            username 或 email
+	 * @param password
+	 * @return
+	 */
+	public Map<String, Object> verify(String unique, String password) {
+		Map<String, Object> user = queryByUnique(unique);
+
+		if (user == null) {
+			return null;
+		} else {
+			Map<String, Object> ue = queryExtendByUserid(user.get("id")); // 获取用户扩展信息
+			user.put("nickname", ue.get("nickname"));
+			String salt = (String) user.get("salt");
+			String encryptPassword = SecureUtils.encrypt(password, salt);
+
+			if (encryptPassword != null
+					&& encryptPassword.equals(user.get("password"))) {
+				user.put("lastlogin", new Timestamp(System.currentTimeMillis()));
+				userMapper.updateLastLoginTime(user);
+				fixUser(user);
+				return user;
+			} else {
+				return null;
+			}
+		}
+
+	}
+
+	/**
+	 * 处理用户名称如何显示等
+	 * 
+	 * @param user
+	 */
+	public static void fixUser(Map<String, Object> user) {
+		String[] displayOrderFields = { "nickname", "username", "id" };
+		String[] uniqueOrderFields = { "username", "id" };
+
+		if (user != null) {
+			for (String foo : displayOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("displayName", bar);
+					break;
+				}
+			}
+
+			for (String foo : uniqueOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("unique", bar);
+					break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * 重置密码
+	 * 
+	 * @param email
+	 * @param password
+	 * @param action
+	 * */
+	public int updatePasswd(String email, String password, int action) {
+		Map<String, Object> salt = new HashMap<String, Object>();
+		salt.put("object", password);
+		if (!SecureUtils.encryptPassword(salt)) {
+			return -1;
+		}
+		Map<String, Object> user = new HashMap<String, Object>();
+		user.put("email", email);
+		user.put("password", salt.get("objectBysalt"));
+		user.put("salt", salt.get("salt"));
+		int success = userMapper.updatePasswordByEmail(user);// 更新密码
+		if (success > 0) {
+			// 新增用户密码操作记录
+			Map<String, Object> user_option = new HashMap<String, Object>();
+			user_option.put("action", action);
+			user_option.put("user_id", queryByUnique(email).get("id"));
+			user_option.put("timestamp",
+					new Timestamp(System.currentTimeMillis()));
+			userMapper.insertUserOption(user_option);
+
+		}
+		return success;
+	}
+
+	/**
+	 * 修改用户头像
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public int updateAvatar(Map<String, Object> user) {
+
+		return userMapper.updateAvatar(user);
+	}
+
+	/**
+	 * 根据email或username查询user表信息
+	 * 
+	 * @param unique
+	 * */
+	public Map<String, Object> queryByUnique(String unique) {
+		return userMapper.queryByUnique(unique);
+	}
+
+	/**
+	 * 查询sq表的密保问题，返回所有
+	 * 
+	 * @return List<Map<String, Object>>sq
+	 */
+	public List<Map<String, Object>> queryAllSq() {
+		return userMapper.queryAllSq();
+	}
+
+	/**
+	 * 更改用户密保问题和答案
+	 * */
+	public int updatePasswdProtect(Map<String, Object> user) {
+		return userMapper.updatePasswdProtect(user);
+	}
+	/**
+	 * 更改用户密码
+	 * */
+	
+	/** user_extends 表操作 */
+
+	/**
+	 * @author reyenxu
+	 * @function 查询用户扩展信息
+	 * @param user_id
+	 * @return (Map)user_extend
+	 */
+	public Map<String, Object> queryExtendByUserid(Object user_id) {
+		return userMapper.queryExtendByUserid(user_id);
+	}
+
+	/**
+	 * 插入用户在user_extend表
+	 * 
+	 * @param user_id
+	 * @return (int)success
+	 */
+	public int insertUseExtend(Object user_id) {
+		return userMapper.insertUserExtend(user_id);
+	}
+
+	/**
+	 * 更新用户扩展信息资料
+	 * */
+	public int updateUseExtend(Map<String, Object> user) {
+		return userMapper.updateUseExtend(user);
+	}
+
+	/*-------------user_validateCode Table Option-------------------------*/
+
+	/**
+	 * @param email
+	 *            获取用户验证信息记录
+	 * */
+	public Map<String, Object> queryUserValidateCodeByEmail(String email) {
+		return userMapper.queryUserValidateCodeByUserid(userMapper
+				.queryUserValidateCodeByUserid(userMapper.queryByUnique(email)
+						.get("id")));
+	}
+
+	/*-------------user_option Table Option-------------------------*/
+
+	/**
+	 * 获取用户密码操作记录
+	 * 
+	 * @param email
+	 * */
+	public List<Map<String, Object>> queryUserOption(Object user_id) {
+		return userMapper.queryUserOption(user_id);
+	}
+
+	/** TempUserInformation */
+	// 【改】
+	/**
+	 * 创建新的临时用户
+	 * 
+	 * ordernum_id,recieve_name,tel,address_info_id,sendtime,use_state,dorm,
+	 * timestamp 随机数id，电话号码，地址id，配送时间，订单状态，时间戳
+	 */
+
+	public Map<String, Object> CreateTempUserInformation(String ordernum_id,
+			String recieve_name, String tel, String address_info_id,
+			String sendtime, String dorm) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("ordernum_id", ordernum_id);
+		temp.put("recieve_name", recieve_name);
+		temp.put("tel", tel);
+		temp.put("address_info_id", address_info_id);
+		temp.put("sendtime", sendtime);
+		temp.put("use_state", 0);
+		temp.put("dorm", dorm);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+
+		// int CreateTempUserinfo(Map<String, Object> user);
+		int success = userMapper.CreateTempUserinfo(temp);
+		if (success == 1) {
+			temp.put("id", this.TempUserInfoQueryByOrdernumID(temp).get("id"));
+			System.out.println(temp);
+			return temp;
+		} else {
+			Map<String, Object> err = new HashMap<String, Object>();
+			err.put("errinfo", "数据库写入错误，请检查数据项");
+			return err;
+		}
+
+	}
+
+	/**
+	 * 根据Randuid查询临时用户信息
+	 * 
+	 */
+
+	// 【改】
+	public Map<String, Object> TempUserInfoQueryByOrdernumID(
+			Map<String, Object> temp) {
+		return userMapper.TempUserInfoQueryByOrdernumID(temp);
+	}
+
+	/** User_Author验证 */
+
+	public boolean User_Author_Check(int user_id) {
+		if (userMapper.CheckAuthor(user_id) != null) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/** User_Address_Info */
+	// 【改】
+	// user_id,recieve_name,address_info_id,dorm,tel,,state,timestamp
+	public int addUserAddressInfo(String user_id, String recieve_name,
+			String address_info_id, String dorm, String tel) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+
+		temp.put("user_id", user_id);
+		temp.put("recieve_name", recieve_name);
+		temp.put("address_info_id", address_info_id);
+		temp.put("dorm", dorm);
+		temp.put("tel", tel);
+		temp.put("state", 0);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+
+		return user_AddressMapper.addUserAddress(temp);
+
+	}
+
+	/**
+	 * 
+	 * 根据用户ID查询地址数据
+	 */
+	public List<Map<String, Object>> queryByUserid(String userid) {
+		return FixAddress(user_AddressMapper.queryByUserid(userid));
+	}
+
+	/**
+	 * 
+	 * 根据用户地址UID查询数据
+	 */
+	public Map<String, Object> queryByAddressUid(String uid) {
+		return user_AddressMapper.QueryByAddressid(uid);
+	}
+
+	public List<Map<String, Object>> FixAddress(
+			List<Map<String, Object>> address) {
+		List<Map<String, Object>> FixAddressResult = new ArrayList<Map<String, Object>>();
+		for (Map<String, Object> m : address) {
+
+			m.put("fixAddress",
+					baseinformationService.QueryByaddressid(
+							Integer.parseInt(m.get("addressid").toString()))
+							.get("address"));
+			FixAddressResult.add(m);
+		}
+		return FixAddressResult;
+	}
+}

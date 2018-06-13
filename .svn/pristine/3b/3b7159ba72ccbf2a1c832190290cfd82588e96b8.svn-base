@@ -1,0 +1,187 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.UserMapper;
+import com.xdsoft.mvc.mapper.User_AddressMapper;
+import com.xdsoft.mvc.service.exception.UserExsitsException;
+import com.xdsoft.secure.SecureUtils;
+
+/**
+ * 用户
+ * 
+ * @author weiwei
+ * 
+ */
+
+@Service
+public class UserService {
+
+	@Resource
+	private UserMapper userMapper;
+
+	@Resource
+	private User_AddressMapper user_AddressMapper;
+
+	@Resource
+	private BaseinformationService baseinformationService;
+
+	/**
+	 * 注册
+	 * 
+	 * @param email
+	 *            , username, password, salt, join_at
+	 * @param 邮箱
+	 *            、用户名、密码、盐值、注册日期
+	 * @return
+	 * @throws UserExsitsException
+	 */
+	public Map<String, Object> register(String email, String username, String password) throws UserExsitsException {
+		if (this.userMapper.queryByUnique(email) != null || this.userMapper.queryByUnique(username) != null) {
+			throw new UserExsitsException();
+		}
+
+		Map<String, Object> salt = new HashMap<String, Object>();
+		salt.put("object", password);
+
+		if (!SecureUtils.encryptPassword(salt)) {
+			return null;
+		}
+
+		Map<String, Object> user = new HashMap<String, Object>();
+		user.put("email", email);
+		user.put("username", username);
+		user.put("password", salt.get("objectBysalt"));
+		user.put("salt", salt.get("salt"));
+		user.put("join_at", new Timestamp(System.currentTimeMillis()));
+
+		int success = userMapper.AddUser(user);
+		insertUseExtends(user);//建立用户扩展信息记录
+		
+		if (success == 1) {
+
+			fixUser(user);
+			return user;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 验证用户登录
+	 * 
+	 * @param unique
+	 *            username 或 email
+	 * @param password
+	 * @return
+	 */
+	public Map<String, Object> verify(String unique, String password) {
+		Map<String, Object> user = userMapper.queryByUnique(unique);
+
+		if (user == null) {
+			return null;
+		}
+		Map<String, Object> ue = queryUserextends((Integer) user.get("uid")); // 获取用户扩展信息
+		user.put("nickname", ue.get("nickname"));
+		user.put("avatar", ue.get("avatar"));
+		String salt = (String) user.get("salt");
+
+		String encryptPassword = SecureUtils.encrypt(password, salt);
+
+		if (encryptPassword != null && encryptPassword.equals(user.get("password"))) {
+			fixUser(user);
+			return user;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 处理用户名称如何显示等
+	 * 
+	 * @param user
+	 */
+	public static void fixUser(Map<String, Object> user) {
+		String[] displayOrderFields = { "nickname", "username", "uid" };
+		String[] uniqueOrderFields = { "username", "uid" };
+
+		if (user != null) {
+			for (String foo : displayOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("displayName", bar);
+					break;
+				}
+			}
+
+			for (String foo : uniqueOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("unique", bar);
+					break;
+				}
+			}
+		}
+	}
+
+//	/** user_extends 表操作 */
+//
+//	/**
+//	 * @author reyenxu
+//	 * @function 查询用户扩展信息
+//	 * @param uid
+//	 * @return user_extends table record
+//	 */
+//	public Map<String, Object> queryUserextends(int uid) {
+//		return userMapper.queryByuid(uid);
+//	}
+//
+//	/**
+//	 * 修改用户头像
+//	 * 
+//	 * @param a
+//	 * @return
+//	 */
+//	public Map<String, Object> updateAvatar(Map<String, Object> user) {
+//		int success = userMapper.updateAvatar(user);
+//
+//		if (success == 1) {
+//			return user;
+//		} else {
+//			return null;
+//		}
+//	}
+//	
+//	/**
+//	 * @function 插入用户在user_extends表
+//	 * @param Map<String, Object>user
+//	 * @return int(success)
+//	 */
+//	public int insertUseExtends(Map<String, Object> user) {
+//		return userMapper.insertUserExtends(user);
+//	}
+//	
+//	/**
+//	 * @function 更新用户扩展信息资料
+//	 * */
+//	public int updateUseExtends(Map<String, Object> user){
+//		return userMapper.updateUseExtends(user);
+//	}
+//	
+//	/**
+//	 * @function 查询sq表的密保问题，返回所有
+//	 * @return List<Map<String, Object>>sq
+//	 */
+//	public List<Map<String, Object>> querySq(){
+//		return userMapper.querySq();
+//	}
+	
+}

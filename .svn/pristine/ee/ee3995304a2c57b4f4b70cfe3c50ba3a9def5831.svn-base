@@ -1,0 +1,88 @@
+package com.xdsoft.mvc.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.BunkoMapper;
+import com.xdsoft.mvc.mapper.ManagerMapper;
+import com.xdsoft.mvc.mapper.OrdersMapper;
+import com.xdsoft.mvc.util.AuthUtils;
+/**
+ * 
+ * 
+ */
+
+
+@Service
+public class ManagerService {
+
+	@Resource
+	private OrdersMapper ordersMapper;
+	@Resource
+	private ManagerMapper managerMapper;
+	
+//	/**
+//	 *   需要打印的文件信息接口
+//	 * 
+//	 * 
+//	 */
+//	public List<Map<String,Object>> QueryAllNoPrintFilesInfo(String start,String limit){
+//		Map<String,Object> temp = new HashMap<String,Object>();
+//		temp.put("start", start);
+//		temp.put("limit", limit);
+//		return managerMapper.QueryAllNoPrintFilesInfo(temp);
+//	}
+
+	/**
+	 * 获取所用订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllOrderDetail() {
+		return managerMapper.QueryAllOrderDetail();
+	}
+
+	/**
+	 * 获取所用未完成订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllUnfinishedOrderDetail() {
+		return managerMapper.QueryAllUnfinishedOrder();
+	}
+
+	/**
+	 * 获取所用未完成订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryAllFinishedOrderDetail() {
+		return managerMapper.QueryAllFinishedOrder();
+	}
+
+	/**
+	 * 获取超过三天的订单详情
+	 * 
+	 * @return u.id 'user_id',u.username,o.id
+	 *         'order_list_id',r.ordernum,o.`timestamp` 'order_list_timestamp'
+	 *         ,o.payment, o.paytimestamp , o.paystate
+	 * */
+	public List<Map<String, Object>> queryTimeoutOrderDetail() {
+		return managerMapper.QueryTimeoutOrder();
+	}
+
+	
+}

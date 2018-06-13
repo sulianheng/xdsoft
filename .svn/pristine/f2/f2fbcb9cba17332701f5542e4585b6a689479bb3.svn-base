@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.ManagerMapper">
+
+
+	<!-- 计算订单总价 -->
+	<select id="CountPrintFilesInfo" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select t.*,p.*
+		from tempfile
+		t,printinfo p
+		where
+		t.ordernum_id = #{ordernum_id} and t.id = p.tempfile_id
+	</select>
+
+
+
+
+	<!-- 联合查询 -->
+	<!-- in (select a.tempfileuid from tempfile a where printstate=#{printstate} 
+		limit #{start},#{limit}) -->
+
+	<select id="QueryFilesAllInfo" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select o.*,t.*,p.*,a.*,r.*
+		from orderlist o,tempfile
+		t,printinfo p,tempuser_address a,user_address u
+		where o.order_state = 0
+		and o.ordernum_id = t.ordernum_id and t.id = p.tempfile_id and
+		(o.tempuser_address_id = a.id or o.user_id = u.user_id)
+		order by
+		o.timestamp asc
+		limit
+		#{start},#{limit}
+	</select>
+
+	<!-- 打印信息统计 -->
+	<select id="QueryFilesPrintInfo" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select
+		p.*
+		from printinfo p,tempfile t
+		where
+		t.ordernum_id=#{ordernumid} and
+		p.tempfile_id = t.id
+	</select>
+
+
+
+</mapper>  

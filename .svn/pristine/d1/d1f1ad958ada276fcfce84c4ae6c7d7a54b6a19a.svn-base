@@ -1,0 +1,282 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+<script type="text/javascript"
+	src="<%=basePath%>static/fileinput/fileinput.js"></script>
+<script type="text/javascript"
+	src="<%=basePath%>static/fileinput/fileinput_locale_zh.js"></script>
+
+<link href="<%=basePath%>static/fileinput/css/fileinput.css" media="all"
+	rel="stylesheet" type="text/css" />
+<link href="<%=basePath%>static/fileinput/css/all-krajee.css"
+	media="all" rel="stylesheet" type="text/css" />
+ <link href="<%=basePath%>static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+		<style type="text/css">
+      body {
+  text-align: center;
+}
+
+section {
+  width: 80%;
+  margin: auto;
+  text-align: left;
+}
+.col-sm-2 control-label{
+  width: 100;
+}
+    </style>
+<div class="container">
+
+<h1>这是文库的主上传界面</h1>
+
+
+				<form action="<%=basePath%>bunko/onlineupload" enctype="multipart/form-data" method="post">
+					<input id="fileupload"  type="file" name="file"  > <br>
+					<input id="submit" type="submit" value="提交" name="sub">
+				</form>
+
+
+ 
+<br>
+  <form id="upload" class="form-horizontal"
+    action="<%=basePath%>test/nnn" method="post"
+    enctype="multipart/form-data">
+
+  <div class="form-group">
+    <div class="panel panel-default col-sm-10 col-sm-offset-1">
+      <div class="panel-body">
+        </div>
+
+        <div class="row" >
+          <div class="col-md-7" style="border-right:1px solid #ddd">
+
+            <div class="form-group" >
+              <label class="col-sm-3 control-label">标题：</label>
+              <div class="col-sm-5">
+                <input type="text" class="form-control" id="inputPassword"
+                  placeholder="Password">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputPassword" class="col-sm-3 control-label">文件简介：</label>
+              <div class="col-sm-9">
+                <textarea class="form-control" id="inputPassword" row="3"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputPassword" class="col-sm-3 control-label">文件标签：</label>
+              <div class="col-sm-9">
+                <input class="form-control" id="inputPassword">
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-5" style="padding-left: 30px;">
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="circle" name="circle">
+                    <option value="0">选择区域</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="campus" name="campus">
+                    <option value="0">选择校区</option>
+
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="address"
+                    name="address">
+                    <option value="0">选择地点</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-6">
+                  <input type ="radio" name ="up1" value ="up1" checked="checked"> 公有上传
+                </div>
+                <div class="col-md-6">
+                  <input type ="radio" name ="up1" value ="up2" > 私密上传
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group"></div>
+            <div class="form-group"></div>
+            <div class="form-group"></div>
+            <div class="form-group">
+              <div class="row">
+          <div class="col-md-6"></div>
+          <div class="col-md-3"><button>收起</button></div>
+          <div class="col-md-3"><button>删除</button></div>
+        </div>
+            </div>
+
+            
+          </div>
+        </div>
+      
+      </div>
+    </div>
+
+
+
+
+  <div class="form-group">
+    <div class="panel panel-default col-sm-10 col-sm-offset-1">
+      <div class="panel-body">
+        </div>
+        
+        <div class="row" >
+          <div class="col-md-7" style="border-right:1px solid #ddd">
+
+            <div class="form-group" >
+              <label class="col-sm-3 control-label">标题：</label>
+              <div class="col-sm-5">
+                <input type="text" class="form-control" id="inputPassword"
+                  placeholder="Password">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputPassword" class="col-sm-3 control-label">文件简介：</label>
+              <div class="col-sm-9">
+                <textarea class="form-control" id="inputPassword" row="3"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputPassword" class="col-sm-3 control-label">文件标签：</label>
+              <div class="col-sm-9">
+                <input class="form-control" id="inputPassword">
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-5" style="padding-left: 30px;">
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="circle" name="circle">
+                    <option value="0">选择区域</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="campus" name="campus">
+                    <option value="0">选择校区</option>
+
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <select class="form-control input-md" id="address"
+                    name="address">
+                    <option value="0">选择地点</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-6">
+                  <input type ="radio" name ="up2" value ="up1" checked="checked"> 公有上传
+                </div>
+                <div class="col-md-6">
+                  <input type ="radio" name ="up2" value ="up2" > 私密上传
+                </div>
+              </div>
+            </div>
+            <div class="form-group"></div>
+            <div class="form-group"></div>
+            <div class="form-group"></div>
+            <div class="form-group">
+              <div class="row">
+          <div class="col-md-6"></div>
+          <div class="col-md-3"><button>收起</button></div>
+          <div class="col-md-3"><button>删除</button></div>
+        </div>
+            </div>
+
+
+          </div>
+        </div>
+      
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="form-group">
+      <button type="button" id="button" name="button"
+        class="btn btn-primary btn-lg button">继续添加</button>
+
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+      <button type="submit" class="btn btn-primary btn-lg">确认上传</button>
+    </div>
+
+
+  </form>
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<script>
+
+	var sec = 0.08;
+	$('#fileupload').fileinput({
+		uploadAsync : false,
+		language : 'zh',
+		allowedFileExtensions : [ 'doc' ,'docx','txt','pdf','ppt'],
+		allowedPreviewTypes : [ 'doc', 'ppt' ],
+		previewFileIcon : '<i class="fa fa-file"></i>',
+		previewFileIconSettings : {
+			'doc' : '<i class="fa fa-file-word-o text-primary"></i>',
+			'xls' : '<i class="fa fa-file-excel-o text-success"></i>',
+			'ppt' : '<i class="fa fa-file-powerpoint-o text-danger"></i>',
+			'jpg' : '<i class="fa fa-file-photo-o text-warning"></i>',
+			'pdf' : '<i class="fa fa-file-pdf-o text-danger"></i>',
+			'zip' : '<i class="fa fa-file-archive-o text-muted"></i>',
+			'htm' : '<i class="fa fa-file-code-o text-info"></i>',
+			'txt' : '<i class="fa fa-file-text-o text-info"></i>',
+			'mov' : '<i class="fa fa-file-movie-o text-warning"></i>',
+			'mp3' : '<i class="fa fa-file-audio-o text-warning"></i>',
+		}
+
+	});
+
+	
+
+	
+	
+</script>

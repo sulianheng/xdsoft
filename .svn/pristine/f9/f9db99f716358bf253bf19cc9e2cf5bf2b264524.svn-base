@@ -1,0 +1,25 @@
+package com.xdsoft.mvc.controller;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.xdsoft.web.framework.annotation.PublicPage;
+
+/**
+ * 后台管理，每个方法需要带有request和response参数
+ * @author reyenxu
+ * */
+@Controller
+@RequestMapping(value = "/manager")
+public class ManagerController {
+
+	@PublicPage
+	@RequestMapping(value = "/manager")
+	public String manager(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/manager";
+	}
+}

@@ -1,0 +1,46 @@
+package com.xdsoft.mvc.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.xdsoft.web.framework.annotation.PublicPage;
+
+
+
+@Controller
+@RequestMapping
+public class BunkoController {
+
+	/*
+	 *    解决方法：  http://bbs.csdn.net/topics/390506550
+	 * 
+	 */
+	
+	
+	@PublicPage
+	@RequestMapping(value="/bunko")
+	public String bunkoshow(HttpServletRequest request)
+	{
+		return "bunkos/bunkomain";
+		
+	}
+	
+	
+
+	@PublicPage
+	@RequestMapping(value="/bunkofile")
+	public String bunko(HttpServletRequest request)
+	{
+		String file = (String) request.getParameter("file");
+		System.out.println(file);
+		request.setAttribute("file", file); 
+		return "bunkos/bunkoFshow";
+		
+	}
+	
+	
+	
+	
+}

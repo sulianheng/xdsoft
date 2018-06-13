@@ -1,0 +1,34 @@
+
+body {
+	background: #E5E5E5; <!--
+	background-color: #f8f8f8; -->
+	padding-bottom: 40px;
+	padding-top: 30px;
+}
+
+.blur {
+	background-image: url('photos/15204301893_31a4cfaba5_o.jpg');
+	-webkit-filter: blur(3px);
+	-moz-filter: blur(3px);
+	-o-filter: blur(3px);
+	-ms-filter: blur(3px);
+	filter: blur(3px)
+}
+
+form {
+	max-width: 330px;
+	margin: 0 auto;
+	padding: 15px;
+	-webkit-filter: blur(-10px);
+}
+
+.container {
+	border: 1px solid #fff;
+	color: #000;
+	background: white;
+	background: -moz-linear-gradient(top, #fff, #efefef 8%);
+	background: -webkit-gradient(linear, 0 0, 0 100%, from(#f6f6f6),
+		to(#f4f4f4));
+	font: 11px/1.5em 'Microsoft YaHei';
+	box-shadow: 0 0 15px #222;
+}

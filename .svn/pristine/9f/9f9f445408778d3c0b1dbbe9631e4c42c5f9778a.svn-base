@@ -1,0 +1,19 @@
+package com.xdsoft.mvc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+
+@Transactional
+public interface PrintInfoMapper {
+
+	int addPrintInfo(Map<String, Object> temp);
+
+	Map<String, Object> queryPrintInfoByTempfileuid(String tempfileuid);
+
+	List<Map<String,Object>> queryPrintInfoByPrintState(int printstate);
+	
+	int updatePrintState(Map<String,Object> updateinfo);
+
+}

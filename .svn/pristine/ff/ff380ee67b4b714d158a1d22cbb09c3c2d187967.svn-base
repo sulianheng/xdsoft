@@ -1,0 +1,553 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%><%@ taglib
+	prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+<div class="container">
+	<c:choose>
+		<c:when test="${files  ne null }">
+			<ul id="myTab" class="nav nav-tabs">
+				<li class="active"><a href="#regmanager" data-toggle="tab"
+					aria-expanded="true"> 注册用户打印文件管理 </a></li>
+				<li><a href="#manager" data-toggle="tab"> 未注册用户打印文件管理 </a></li>
+				<li><a href="#citymaster" data-toggle="tab"> 用户管理 </a></li>
+				<li><a href="#complain" data-toggle="tab"> 投诉(建议) </a></li>
+				<!-- <li><a href="#restaurant" data-toggle="tab"> 餐厅审批一览 </a></li> -->
+
+			</ul>
+
+			<div id="myTabContent" class="tab-content">
+
+				<div class="tab-pane fade in active" id="regmanager">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>收货人</th>
+								<th>收货地址</th>
+								<th>收货手机号</th>
+								<th>文件名</th>
+								<th>打印份数</th>
+								<th>打印方式</th>
+								<th>打印选项</th>
+								<th>本单状态</th>
+								<th>上传时间</th>
+								<th>操作选项</th>
+							</tr>
+						</thead>
+
+						<tbody id="managers">
+							<c:forEach items="${files }" var="files">
+								<tr>
+									<td>${files.receivename }</td>
+									<td>${files.addressid }-${files.dorm }</td>
+									<td>${files.phonenum }</td>
+									<td>${files.fileunique - 1 }</td>
+									<td>${files.copies }</td>
+									<td>${files.printoption1 }</td>
+									<td>${files.printoption2 }</td>
+									<td>${files.printstate }</td>
+									<td><fmt:formatDate value="${files.timestamp }"
+											pattern="yyyy-MM-dd HH:mm:ss" /></td>
+									<td><a href="#">已打印</a></td>
+								</tr>
+							</c:forEach>
+						</tbody>
+					</table>
+					<script id="manager-template" type="text/x-jquery-tmpl">
+					
+						<tr>
+							<td>{{= uid}}</td>
+							<td>{{= username}}</td>
+							<td></td>
+							{{if limitime}}
+								<td>\${$.format.date(limitime,'yyyy-MM-dd HH:mm:ss')}</td>
+							{{else}}
+								<td> </td>
+							{{/if}}
+							<td><a href="<%=basePath %>manager/{{= uid}}">查看详细</a></td>
+
+						</tr>
+
+				
+			</script>
+					<ul class="pager">
+						<li><a class="btn previous disabled" id="last"
+							href="<%=basePath%>manager/json?start=${start}&limit=${limit}"">上一页</a></li>
+						<li><a class="btn" id="next"
+							href="<%=basePath%>manager/json?start=${start + limit}&limit=${limit}"">下一页</a></li>
+					</ul>
+				</div>
+
+				<div class="tab-pane fade" id="manager">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>收货人</th>
+								<th>收货地址</th>
+								<th>收货手机号</th>
+								<th>文件名</th>
+								<th>打印份数</th>
+								<th>打印方式</th>
+								<th>打印选项</th>
+								<th>本单状态</th>
+								<th>上传时间</th>
+								<th>操作选项</th>
+							</tr>
+						</thead>
+
+						<tbody id="managers">
+							<c:forEach items="${files }" var="files">
+								<tr>
+									<td>${files.receivename }</td>
+									<td>${files.addressid }-${files.dorm }</td>
+									<td>${files.phonenum }</td>
+									<td>${files.fileunique - 1 }</td>
+									<td>${files.copies }</td>
+									<td>${files.printoption1 }</td>
+									<td>${files.printoption2 }</td>
+									<td>${files.printstate }</td>
+									<td><fmt:formatDate value="${files.timestamp }"
+											pattern="yyyy-MM-dd HH:mm:ss" /></td>
+									<td><a href="#">已打印</a></td>
+								</tr>
+							</c:forEach>
+						</tbody>
+					</table>
+					<script id="manager-template" type="text/x-jquery-tmpl">
+					
+						<tr>
+							<td>{{= uid}}</td>
+							<td>{{= username}}</td>
+							<td></td>
+							{{if limitime}}
+								<td>\${$.format.date(limitime,'yyyy-MM-dd HH:mm:ss')}</td>
+							{{else}}
+								<td> </td>
+							{{/if}}
+							<td><a href="<%=basePath %>manager/{{= uid}}">查看详细</a></td>
+
+						</tr>
+
+				
+			</script>
+					<ul class="pager">
+						<li><a class="btn previous disabled" id="last"
+							href="<%=basePath%>manager/json?start=${start}&limit=${limit}"">上一页</a></li>
+						<li><a class="btn" id="next"
+							href="<%=basePath%>manager/json?start=${start + limit}&limit=${limit}"">下一页</a></li>
+					</ul>
+				</div>
+
+				<div class="tab-pane fade" id="citymaster">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>申请ID</th>
+								<th>用户名</th>
+								<th>真实姓名</th>
+								<th>申请时间</th>
+								<th>状态</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+
+						<tbody id="apply">
+							<c:forEach items="${apply }" var="apply">
+								<tr>
+									<td>${apply.userid }</td>
+									<td>${apply.username }</td>
+									<td>${apply.citymaster_name }</td>
+									<td><fmt:formatDate value="${apply.timestamp }"
+											pattern="yyyy-MM-dd HH:mm:ss" /></td>
+									<c:if test="${apply.state eq 0 }">
+										<td>未审核</td>
+									</c:if>
+									<c:if test="${apply.state eq 1 }">
+										<td>已通过</td>
+									</c:if>
+									<c:if test="${apply.state eq 2 }">
+										<td>未通过</td>
+									</c:if>
+									<td><a href="<%=basePath %>manager/apply/${apply.id }">查看详细</a></td>
+								</tr>
+							</c:forEach>
+						</tbody>
+
+					</table>
+					<script id="apply-template" type="text/x-jquery-tmpl">
+					
+						<tr>
+							<td>{{= userid}}</td>
+							<td>{{= username}}</td>
+							{{if timestamp}}
+								<td>\${$.format.date(limitime,'yyyy-MM-dd HH:mm:ss')}</td>
+							{{else}}
+								<td> </td>
+							{{/if}}
+							{{if state = 0}}
+								<td>未审核</td>
+							{{else}}
+								{{if state = 1}}
+									<td>已通过</td>
+								{{else}}
+									<td>未通过</td>
+								{{/if}}
+							{{/if}}
+							<td><a href="<%=basePath %>manager/apply/{{= id}}">查看详细</a></td>
+
+						</tr>
+
+				
+				</script>
+					<ul class="pager">
+						<li><a class="btn previous disabled" id="lasta"
+							href="<%=basePath%>manager/apply/json?starta=${starta}&limita=${limita}"">上一页</a></li>
+						<li><a class="btn" id="nexta"
+							href="<%=basePath%>manager/apply/json?starta=${starta + limita}&limita=${limita}"">下一页</a></li>
+					</ul>
+				</div>
+
+
+
+				<div class="tab-pane fade" id="complain">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>发信人</th>
+								<th>内容</th>
+								<th>时间</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+
+						<tbody id="dm">
+							<c:forEach items="${dm }" var="dm">
+								<tr>
+									<td>${dm.displayName }</td>
+									<td>${dm.messagesub }</td>
+									<td><fmt:formatDate value="${dm.Timestamp }"
+											pattern="yyyy-MM-dd HH:mm:ss" /></td>
+									<td><a href="#">查看详细</a><a href="#">回复</a></td>
+								</tr>
+							</c:forEach>
+						</tbody>
+
+					</table>
+					<script id="dm-template" type="text/x-jquery-tmpl">
+					
+						<tr>
+							<td>{{= displayName}}</td>
+							<td>{{= messagesub}}</td>
+							{{if Timestamp}}
+								<td>\${$.format.date(limitime,'yyyy-MM-dd HH:mm:ss')}</td>
+							{{else}}
+								<td> </td>
+							{{/if}}
+							<td><a href="#">查看详细</a></td>
+
+						</tr>
+
+				
+				</script>
+					<ul class="pager">
+						<li><a class="btn previous disabled" id="lastb"
+							href="<%=basePath%>manager/dm/json?startb=${startb}&limitb=${limitb}"">上一页</a></li>
+						<li><a class="btn" id="nextb"
+							href="<%=basePath%>manager/dm/json?startb=${startb + limitb}&limitb=${limitb}"">下一页</a></li>
+					</ul>
+				</div>
+
+
+				<!-- 
+			<div class="tab-pane fade " id="restaurant">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th>申请ID</th>
+							<th>申请用户</th>
+							<th>申请饭店</th>
+							<th>申请时间</th>
+							<th>审批人(时间)</th>
+							<th>详细信息</th>
+						</tr>
+					</thead>
+
+					<tbody id="operate">
+						<c:forEach items="${operate}" var="operate">
+							<tr>
+								<td>${operate.id }</td>
+								<td>${operate.username }</td>
+								<td>${operate.RestaurantName }</td>
+								<td><fmt:formatDate value="${operate.timestamp }"
+										pattern="yyyy-MM-dd HH:mm:ss" /></td>
+								<td>${operate.opusers }</td>
+								<td><a href="#">查看详细</a></td>
+							</tr>
+						</c:forEach>
+					</tbody>
+
+				</table>
+				<script id="operate-template" type="text/x-jquery-tmpl">
+					
+						<tr>
+							<td>{{= id}}</td>
+							<td>{{= username}}</td>
+							{{if timestamp}}
+								<td>\${$.format.date(limitime,'yyyy-MM-dd HH:mm:ss')}</td>
+							{{else}}
+								<td> </td>
+							{{/if}}
+							<td>{{= opusers}} </td>
+							<td><a href="#">查看详细</a></td>
+
+						</tr>
+
+				
+				</script>
+				<ul class="pager">
+					<li><a class="btn previous disabled" id="lastc"
+						href="<%=basePath%>manager/operate/json?startc=${startc}&limitc=${limitc}"">上一页</a></li>
+					<li><a class="btn" id="nextc"
+						href="<%=basePath%>manager/operate/json?startc=${startc + limitc}&limitc=${limitc}"">下一页</a></li>
+				</ul>
+			</div>
+ -->
+
+
+
+
+
+			</div>
+
+		</c:when>
+		<c:otherwise>
+			<div class="alert alert-danger">你不是管理员！请不要跨权限或擅自修改页面访问地址！</div>
+		</c:otherwise>
+	</c:choose>
+</div>
+<script>
+	(function($) {
+		$(function() {
+			var start = ${start + limit};
+			var limit = ${limit};
+			var starta = ${starta + limita};
+			var limita = ${limita};
+			var startb = ${startb + limitb};
+			var limitb = ${limitb};
+			var startc = ${startc + limitc};
+			var limitc = ${limitc};
+
+			var hasMore = true;
+
+			$('#next,#last').click(
+					function() {
+						var $last = $('#last');
+						var $next = $('#next');
+						var $this = $(this);
+						$.getJSON($(this).attr('href'), function(json) {
+							hasMore = true;
+							if (json.length > 0) {
+								$alluser = $('#manager-template').tmpl(json);
+								$('#managers').empty().append($alluser);
+								if ($this.attr('id') == 'next') {
+									start += limit;
+								} else {
+									start -= limit;
+								}
+
+								$next.attr('href', basePath
+										+ 'manager/json?start=' + start
+										+ '&limit=' + limit);
+								$last.attr('href', basePath
+										+ 'manager/json?start='
+										+ (start - limit * 2 > 0 ? start
+												- limit * 2 : 0) + '&limit='
+										+ limit);
+								$next.button('reset');
+
+								if (json.length < limit) {
+									hasMore = false;
+								}
+							} else {
+								hasMore = false;
+							}
+
+							if (!hasMore) {
+								$next.attr('disabled', 'disabled');
+								$next.addClass('disabled');
+							} else {
+								$next.attr('disabled', null);
+								$next.removeClass('disabled');
+							}
+							if (start - limit <= 0) {
+								$last.attr('disabled', 'disabled');
+								$last.addClass('disabled');
+							} else {
+								$last.attr('disabled', null);
+								$last.removeClass('disabled');
+							}
+						});
+						return false;
+					});
+
+			$('#nexta,#lasta').click(
+					function() {
+						var $lasta = $('#lasta');
+						var $nexta = $('#nexta');
+						var $this = $(this);
+						$.getJSON($(this).attr('href'), function(json) {
+							hasMore = true;
+							if (json.length > 0) {
+								$apply = $('#apply-template').tmpl(json);
+								$('#apply').empty().append($apply);
+								if ($this.attr('id') == 'nexta') {
+									starta += limita;
+								} else {
+									starta -= limita;
+								}
+
+								$nexta.attr('href', basePath
+										+ 'manager/apply/json?starta=' + starta
+										+ '&limita=' + limita);
+								$lasta.attr('href', basePath
+										+ 'manager/apply/json?starta='
+										+ (starta - limita * 2 > 0 ? starta
+												- limita * 2 : 0) + '&limita='
+										+ limita);
+								$nexta.button('reset');
+
+								if (json.length < limita) {
+									hasMore = false;
+								}
+							} else {
+								hasMore = false;
+							}
+
+							if (!hasMore) {
+								$nexta.attr('disabled', 'disabled');
+								$nexta.addClass('disabled');
+							} else {
+								$nexta.attr('disabled', null);
+								$nexta.removeClass('disabled');
+							}
+							if (starta - limita <= 0) {
+								$lasta.attr('disabled', 'disabled');
+								$lasta.addClass('disabled');
+							} else {
+								$lasta.attr('disabled', null);
+								$lasta.removeClass('disabled');
+							}
+						});
+						return false;
+					});
+
+			$('#nextb,#lastb').click(
+					function() {
+						var $lastb = $('#lastb');
+						var $nextb = $('#nextb');
+						var $this = $(this);
+						$.getJSON($(this).attr('href'), function(json) {
+							hasMore = true;
+							if (json.length > 0) {
+								$dm = $('#dm-template').tmpl(json);
+								$('#dm').empty().append($dm);
+								if ($this.attr('id') == 'nextb') {
+									startb += limitb;
+								} else {
+									startb -= limitb;
+								}
+
+								$nextb.attr('href', basePath
+										+ 'manager/dm/json?startb=' + startb
+										+ '&limitb=' + limitb);
+								$lastb.attr('href', basePath
+										+ 'manager/dm/json?startb='
+										+ (startb - limitb * 2 > 0 ? startb
+												- limitb * 2 : 0) + '&limitb='
+										+ limitb);
+								$nextb.button('reset');
+
+								if (json.length < limitb) {
+									hasMore = false;
+								}
+							} else {
+								hasMore = false;
+							}
+
+							if (!hasMore) {
+								$nextb.attr('disabled', 'disabled');
+								$nextb.addClass('disabled');
+							} else {
+								$nextb.attr('disabled', null);
+								$nextb.removeClass('disabled');
+							}
+							if (startb - limitb <= 0) {
+								$lastb.attr('disabled', 'disabled');
+								$lastb.addClass('disabled');
+							} else {
+								$lastb.attr('disabled', null);
+								$lastb.removeClass('disabled');
+							}
+						});
+						return false;
+					});
+
+			$('#nextc,#lastc').click(
+					function() {
+						var $lastc = $('#lastc');
+						var $nextc = $('#nextc');
+						var $this = $(this);
+						$.getJSON($(this).attr('href'), function(json) {
+							hasMore = true;
+							if (json.length > 0) {
+								$dm = $('#operate-template').tmpl(json);
+								$('#dm').empty().append($dm);
+								if ($this.attr('id') == 'nextc') {
+									startc += limitc;
+								} else {
+									startc -= limitc;
+								}
+
+								$nextc.attr('href', basePath
+										+ 'manager/operate/json?startc='
+										+ startc + '&limitc=' + limitc);
+								$lastc.attr('href', basePath
+										+ 'manager/operate/json?startc='
+										+ (startc - limitc * 2 > 0 ? startc
+												- limitc * 2 : 0) + '&limitc='
+										+ limitc);
+								$nextc.button('reset');
+
+								if (json.length < limitc) {
+									hasMore = false;
+								}
+							} else {
+								hasMore = false;
+							}
+
+							if (!hasMore) {
+								$nextc.attr('disabled', 'disabled');
+								$nextc.addClass('disabled');
+							} else {
+								$nextc.attr('disabled', null);
+								$nextc.removeClass('disabled');
+							}
+							if (startc - limitc <= 0) {
+								$lastc.attr('disabled', 'disabled');
+								$lastc.addClass('disabled');
+							} else {
+								$lastc.attr('disabled', null);
+								$lastc.removeClass('disabled');
+							}
+						});
+						return false;
+					});
+		});
+	})(jQuery);
+</script>
+
+

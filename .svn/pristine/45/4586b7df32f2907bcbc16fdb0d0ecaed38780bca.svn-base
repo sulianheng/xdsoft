@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.ManagerMapper">
+
+
+	<!-- 计算订单总价 -->
+	<select id="CountPrintFilesInfo" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select t.*,p.*
+		from tempfile
+		t,printinfo p
+		where
+		t.ordernum_id
+		= #{ordernum_id} and t.id = p.tempfile_id
+	</select>
+
+
+	<!-- 联合查询 -->
+	<!-- in (select a.tempfileuid from tempfile a where printstate=#{printstate} 
+		limit #{start},#{limit}) -->
+
+	<select id="QueryFilesAllInfo" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select o.*,t.*,p.*,a.*,r.*
+		from orderlist o,tempfile
+		t,printinfo p,tempuser_address a,user_address u
+		where o.order_state = 0
+		and o.ordernum_id = t.ordernum_id and t.id = p.tempfile_id and
+		(o.tempuser_address_id = a.id or o.user_id = u.user_id)
+		order by
+		o.timestamp asc
+		limit
+		#{start},#{limit}
+	</select>
+
+	<!-- 打印信息统计 -->
+	<select id="QueryFilesPrintInfo" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select
+		p.*
+		from printinfo p,tempfile t
+		where
+		t.ordernum_id=#{ordernumid} and
+		p.tempfile_id = t.id
+	</select>
+
+	<!--*********查询所有订单****************** -->
+	<select id="QueryAllOrderDetail" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select o.id,u.username,o.payment ,o.bonus,
+		CASE o.order_state when '0'
+		THEN '未支付' when '1' then '已支付' END order_state,
+		CASE p.printstate when
+		'0' THEN '未打印' when '1' then '已打印' END print_state,
+		DATE_FORMAT(o.`timestamp`,"%Y-%m-%d %H:%i:%s") `timestamp`,r.ordernum
+		FROM orderlist o
+		LEFT JOIN tempfile tf ON tf.ordernum_id =
+		o.ordernum_id
+		LEFT JOIN randordernum r ON r.id = o.ordernum_id
+		LEFT JOIN
+		printinfo p ON p.tempfile_id = tf.id
+		LEFT JOIN tempuser_address ta ON
+		ta.id = o.tempuser_address_id
+		LEFT JOIN `user` u ON u.id = o.user_id
+		where 1=1
+		<if test="order_state != null">
+			and o.order_state = #{order_state}
+		</if>
+		<if test="print_state != null">
+			and p.printstate = #{print_state}
+		</if>
+		GROUP BY o.id
+		ORDER BY o.`timestamp` DESC
+		<if test="start_limit != null and end_limit != null">
+			limit #{start_limit},#{end_limit}
+		</if>
+	</select>
+	<!--查询所有未完成的订单 -->
+	<select id="QueryAllUnfinishedOrder" resultType="java.util.Map">
+		select u.id
+		'user_id',u.username,o.id
+		'order_list_id',r.ordernum,DATE_FORMAT(o.`timestamp`,'%m-%d-%Y %h:%i')
+		AS
+		'order_list_timestamp' ,o.payment, o.orderlist_state,o.paytimestamp
+		,
+		o.paystate FROM
+		orderlist o,randordernum r , `user` u WHERE
+		o.ordernum_id = r.id AND
+		o.user_id = u.id AND o.orderlist_state = '0'
+		GROUP BY r.ordernum ORDER BY o.`timestamp` DESC ,
+		u.id ASC
+	</select>
+	<!--查询所有已完成的订单 -->
+	<select id="QueryAllFinishedOrder" resultType="java.util.Map">
+		select u.id
+		'user_id',u.username,o.id
+		'order_list_id',r.ordernum,DATE_FORMAT(o.`timestamp`,'%m-%d-%Y %h:%i')
+		AS
+		'order_list_timestamp' ,o.payment, o.orderlist_state,o.paytimestamp
+		,
+		o.paystate FROM
+		orderlist o,randordernum r , `user` u WHERE
+		o.ordernum_id = r.id AND
+		o.user_id = u.id AND o.orderlist_state = '1'
+		GROUP BY r.ordernum ORDER BY o.`timestamp` DESC ,
+		u.id ASC
+	</select>
+	<!--查询三天前的订单 -->
+	<select id="QueryTimeoutOrder" resultType="java.util.Map">
+		select u.id
+		'user_id',u.username,o.id
+		'order_list_id',r.ordernum,DATE_FORMAT(o.`timestamp`,'%m-%d-%Y %h:%i')
+		AS 'order_list_timestamp'
+		,o.payment,o.orderlist_state ,o.paytimestamp
+		, o.paystate FROM orderlist o,randordernum
+		r
+		, `user` u WHERE
+		o.ordernum_id = r.id AND o.user_id = u.id AND
+		TO_DAYS(o.`timestamp`)
+		&lt; TO_DAYS(CURDATE())-3 Group BY r.ordernum
+		ORDER
+		BY o.`timestamp`
+		DESC , u.id ASC
+	</select>
+
+	<!-- 模糊查询用户 -->
+	<select id="searchUser" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from user where
+		username LIKE CONCAT(CONCAT('%',
+		#{content}, '%'))
+		or
+		email LIKE CONCAT(CONCAT('%',#{content}, '%'))
+	</select>
+
+	<!-- 查询用户 -->
+	<select id="searchUserByUnique" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from user u where u.username = #{unique} or
+		u.email = #{unique}
+	</select>
+
+	<insert id="insertUserAuth" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="id">
+		insert into
+		user_author(user_id,author,timestamp)
+		values(#{user_id},#{author},#{timestamp})
+	</insert>
+
+	<select id="query_userlist" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select u.*,
+		CASE ua.author when '1' THEN '超级管理员'
+		when '2' THEN '管理员'
+		when '3' THEN '管理员仅可查看'
+		ELSE '普通用户'
+		END author
+		from `user` u
+		LEFT JOIN user_author ua ON ua.user_id = u.id
+		<if test="start_limit != null and end_limit != null">
+			limit #{start_limit},#{end_limit}
+		</if>
+	</select>
+
+
+
+</mapper>  

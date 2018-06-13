@@ -1,0 +1,97 @@
+package com.xdsoft.mvc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+
+/*
+ * 
+ * User表操作
+ * 
+ **/
+
+@Transactional
+public interface UserMapper {
+
+	/*-------------user table option----------------------*/
+	/**
+	 * @author reyenxu
+	 * 
+	 */
+
+	Map<String, Object> queryByUnique(String unique); // 根据Username或Email查询用户
+
+	int insertUser(Map<String, Object> user); // 注册新用户
+
+	int updateAvatar(Map<String, Object> user); // 更新头像
+
+	int updateLastLoginTime(Map<String, Object> user);// 最后登陆
+
+	int updatePasswordByEmail(Map<String, Object> user);// 通过Email更改用户密码
+
+	/*------------------user_extends表操作--------------------------*/
+	/**
+	 * @author reyenxu
+	 * 
+	 */
+	Map<String, Object> queryExtendByUserid(Object user_id);// 查询用户扩展信息
+
+	int insertUserExtend(Object user_id);// 注册新用户时建立记录
+
+	int updateUseExtend(Map<String, Object> user);// 更改用户扩展信息
+
+	/*-------------user_validateCode table option--------------------------*/
+	/**
+	 * @author reyenxu
+	 * 
+	 */
+	Map<String, Object> queryUserValidateCodeByUserid(Object user_id);// 查询用户验证信息
+
+	int insertUserValidateCode(Map<String, Object> user);// 插入用户验证码记录
+															// user_id,validateCode,timestamp
+
+	int updateUserValidateCode(Map<String, Object> user);// 更改用户验证信息
+
+	/*-------------user_option table option--------------------------*/
+
+	List<Map<String, Object>> queryUserOption(Object user_id);// 查询用户密码操作记录
+
+	int insertUserOption(Map<String, Object> user);// 插入用户密码操作记录
+	
+	/*----------------sq table option ------------------------------*/
+	/**
+	 * sq表操作(密保问题)
+	 * @return List<Map>
+	 * */
+	public List<Map<String, Object>> queryAllSq();// 查询sq表的密保问题，返回所有
+
+	/*********************************************************/
+
+	/*-------------TempUserInfo----------------------------*/
+	/**
+	 * @author weiwei
+	 * 
+	 */
+
+	int CreateTempUserinfo(Map<String, Object> user);
+
+	List<Map<String, Object>> TempUserInfoQueryByid(int uid);
+
+	List<Map<String, Object>> TempUserInfoQueryByPhonenum(String phonenum);
+
+	List<Map<String, Object>> TempUserInfoQueryByOrdernumID(int Orderlistid);
+
+	Map<String, Object> TempUserInfoQueryByOrdernumID(Map<String, Object> temp);
+
+	/**
+	 * 
+	 * User_Author
+	 * 
+	 */
+
+	Map<String, Object> CheckAuthor(Object user_id);
+
+	int insertAuthor(Map<String, Object> user);
+
+}

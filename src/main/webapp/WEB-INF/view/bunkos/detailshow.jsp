@@ -1,0 +1,118 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+ <link href="<%=basePath%>static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+	
+		<style type="text/css">
+   .upload{
+    width: 300px;
+    padding-left: 30px;
+    left:50%;
+   }
+
+    </style>
+
+<div class="container" style="width: 700px">
+
+	 <div class="row">
+     <div class="col-lg-8">
+     
+     <div>
+     <p style="font-size: 24px;font-weight: bold;">按照关键词“${findfile }”索引后的结果如下：</p>
+     </div>
+     <br>
+     
+     
+     
+	<c:forEach  var="filename"  items="${listfile }" varStatus="status">
+		
+     
+	 <div class="first">
+            <div class="clearfix">
+                <div  style="float:left"><img src="<%=basePath%>photos/wps.png"><span>  ${filename.filesname}  </span></div>
+                <div  style="float:right"><span> 浏览次数：${filename.readding}  </span></div>
+            </div>
+            <div>
+                 <p><span style="font-weight:bold;">简介：</span> ${filename.desc_info} </p>
+            </div>
+            <div style="float:left">
+              <table>
+                <tr>
+                  <td><span>  ${filename.timestamp}  </span>&nbsp;&nbsp;&nbsp;|&nbsp;</td> 
+                  <td><span> 打印次数： ${filename.printting }次</span> &nbsp;&nbsp;&nbsp;|&nbsp;</td>
+                  <td><span> 作者： ${filename.username}  </span></td>
+                </tr>
+              </table>
+            </div>
+            <div style="float:right">
+              <form action="<%=basePath%>bunko/onlineseo" method="post">
+              			
+						<input hidden="hidden"  name="findfile"  value="${findfile }">
+						<input hidden="hidden"  name="fileid"  value="${filename.id }">
+						<%--<input type="submit" value="预览">--%>
+				</form>
+            </div>  
+        </div>
+	
+	
+	<br>
+       <hr>
+       </c:forEach>
+     </div>
+	
+	
+     <div class="col-lg-4" >
+      <div  class="upload" style="border-left:1px solid #ddd">
+      			<form action="<%=basePath%>bunko/onlineupload" enctype="multipart/form-data" >
+					<input id="submit" type="image" value="上传" src="<%=basePath%>photos/sc.jpg" method="post" onclick="submit()">
+				</form>
+
+        <div class="content">
+  <div class="mainpart">    
+    <div id="homedoclist">
+        
+         <div class="commonbox1">
+      <div class="topic">
+        <h2><a href="#">热门文章</a></h2> 
+      </div>
+     
+      <div class="box">
+       <c:forEach  var="files"  items="${hotfiles }" varStatus="status">
+	
+									 
+										 
+											<form name="form10${status.index}" action="<%=basePath%>bunko/onlineseo" method="post">  
+  												
+													<input hidden="hidden"  name="findfile"  value="${files.filesname}">
+													<input hidden="hidden"  name="fileid"  value="${files.id}">
+													<%--<a href="javascript:document.form10${status.index}.submit();">${files.filesname}</font></a>--%>
+                                                    <a href="#">${files.filesname}</a>
+                                            </form>
+										  <br/>
+									</c:forEach>
+ 
+    
+        </div>
+        </div>
+<br>
+
+<a href="#"><img src="<%=basePath%>photos/zui.png"></a><br><br>
+
+     </div>
+     </div>
+
+
+</div>
+	</div>
+	</div>
+	</div>
+	
+	
+	
+	
+</div>

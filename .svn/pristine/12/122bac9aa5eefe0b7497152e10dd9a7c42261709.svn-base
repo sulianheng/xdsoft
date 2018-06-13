@@ -1,0 +1,265 @@
+package com.xdsoft.mvc.controller;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.xdsoft.mvc.service.EmailValidateService;
+import com.xdsoft.mvc.service.UserService;
+import com.xdsoft.mvc.service.exception.UserExsitsException;
+import com.xdsoft.mvc.tools.DateTool;
+import com.xdsoft.mvc.util.AuthUtils;
+import com.xdsoft.web.framework.annotation.PublicPage;
+import com.xdsoft.web.framework.annotation.SinglePage;
+import com.xdsoft.web.session.SessionUtils;
+
+@Controller
+@RequestMapping(value = "/")
+public class DashBoard {
+	@Resource
+	private UserService userService;
+	@Resource
+	private EmailValidateService emailValidateService;
+
+	@Resource
+	private AuthUtils authUtils;
+
+	@PublicPage
+	@RequestMapping
+	public String home(HttpServletRequest request) {
+
+		return "home";
+	}
+
+	/**
+	 * 登录入口
+	 * 
+	 * @return
+	 */
+
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = { "/login", "/signin" })
+	public String signin(HttpServletRequest request) {
+
+		HttpSession session = request.getSession(true);
+		Map<String, Object> user = authUtils.getLoginUser(request, null, null);
+		if (user == null)
+			user = new HashMap<String, Object>();
+		if (request.getHeader("Referer") != null)
+			user.put("last_page", request.getHeader("Referer"));
+		else
+			user.put("last_page", request.getContextPath());
+		SessionUtils.setAttribute(session, user);
+		// System.out.println(user);
+		// System.out.println(request.getHeader("Referer"));
+		return "login";
+	}
+
+	/***
+	 * 登录入口
+	 * 
+	 * @param unique
+	 *            ：用户名或邮箱
+	 * @return
+	 */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = { "/login", "/signin" }, method = RequestMethod.POST)
+	public String login(@RequestParam String unique,
+			@RequestParam String password, HttpServletRequest request,
+			HttpServletResponse response) {
+		String URL = authUtils.getLoginUser(request, null, null)
+				.get("last_page").toString();
+		Map<String, Object> user = userService.verify(unique, password);
+		if (user != null) {
+			HttpSession session = request.getSession(true);
+			SessionUtils.setAttribute(session, user);
+			// SessionUtils.setAttribute(session,
+			// authUtils.getLoginUser(request, null, null).remove("last_page"));
+			System.out.print(authUtils.getLoginUser(request, null, null));
+			try {
+				response.sendRedirect(URL);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		} else {
+			String message = "用户名或密码不正确!";
+			request.setAttribute("message", message);
+			return "login";
+		}
+	}
+
+	/**
+	 * 注册入口
+	 * 
+	 * @return
+	 */
+	@PublicPage
+	@SinglePage
+	@RequestMapping(value = { "/signup", "/register", "/join" })
+	public String signup() {
+		return "signup";
+	}
+
+	/**
+	 * 处理注册
+	 * 
+	 * @param username
+	 * @param password
+	 * @param invite
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	@PublicPage
+	@SinglePage
+	@RequestMapping(value = { "/signup", "/register", "/join" }, method = RequestMethod.POST)
+	public String register(@RequestParam String email,
+			@RequestParam String username, @RequestParam String password,
+			HttpServletRequest request, HttpServletResponse response) {
+
+		try {
+			Map<String, Object> user = userService.register(email, username,
+					password);// 注册用户
+
+			if (user != null) {
+				login(email, password, request, response);
+				return null;
+			}
+		} catch (UserExsitsException e) {
+			request.setAttribute("message", "用户名或邮箱已存在。");
+		}
+
+		return "signup";
+	}
+
+	/**
+	 * 登出
+	 * 
+	 * @param token
+	 * @param secret
+	 * @param request
+	 * @param response
+	 */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = { "/signout", "/logout" })
+	public void signout(@CookieValue(required = false) String token,
+			@CookieValue(required = false) String secret,
+			HttpServletRequest request, HttpServletResponse response) {
+		SessionUtils.removeAttribute(request.getSession());
+		removeTokenCookie(response);
+		try {
+			response.sendRedirect(request.getContextPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * @param response
+	 */
+	private void removeTokenCookie(HttpServletResponse response) {
+		Cookie tokenCookie = new Cookie("token", null);
+		tokenCookie.setMaxAge(0);
+		response.addCookie(tokenCookie);
+		Cookie secretCookie = new Cookie("secret", null);
+		secretCookie.setMaxAge(0);
+		response.addCookie(secretCookie);
+	}
+
+	/**
+	 * @author reyenxu 忘记密码，邮箱验证
+	 * */
+	@PublicPage
+	@RequestMapping(value = "forget")
+	public String forgetPasswd(HttpServletRequest request) {
+		return "forgetPasswd";
+	}
+
+	/**
+	 * @author reyenxu
+	 * @function 忘记密码，验证码发送到邮箱
+	 * @param email
+	 * */
+	@PublicPage
+	@RequestMapping(value = "restPasswd", method = RequestMethod.POST)
+	public String sendEmail(@RequestParam String email,
+			HttpServletRequest request, HttpServletResponse response) {
+		Map<String, Object> user = userService.queryByUnique(email);
+		if (user != null) {
+			emailValidateService.sendEmail(email, request.getScheme() + "://"
+					+ request.getServerName() + ":" + request.getServerPort()
+					+ request.getContextPath() + "/resetPasswd");
+			try {
+				response.sendRedirect(request.getContextPath() + "/sendSuccess");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			request.setAttribute("message", "暂无该邮箱注册信息,请重新核对后填写");
+		}
+
+		return "forgetPasswd";
+	}
+
+	/**
+	 * 邮件发送成功，跳转页面
+	 * */
+	@PublicPage
+	@RequestMapping(value = "sendSuccess")
+	public String sendSuccess(HttpServletRequest request) {
+		request.setAttribute("message", "发送成功,请到邮箱查看信息");
+		return "Success";
+	}
+
+	/**
+	 * @author reyenxu
+	 * @function 从用户邮箱接收请求，重置密码
+	 * @param email
+	 * @param validateCode
+	 * */
+	@PublicPage
+	@RequestMapping(value = "resetPasswd", method = RequestMethod.GET)
+	public String restPasswd(@RequestParam String email,
+			@RequestParam String validateCode, HttpServletRequest request,
+			HttpServletResponse response) {
+		Map<String, Object> user = userService
+				.queryUserValidateCodeByEmail(email);// 获取用户验证信息记录
+		Date currentTime = new Date();// 获取当前时间
+		Date LastActivateTime = DateTool.getLastActivateTime((Date) user
+				.get("timestamp"));// 获取用户链接生效时间
+		// 验证链接是否有效
+		if (currentTime.before(LastActivateTime)) {
+			// 链接有效
+			// 验证 验证码是否正确
+			if (user.get("validateCode").equals(validateCode)) {
+				request.setAttribute("email", email);
+				return "user/resetPasswd";
+			} else {
+				request.setAttribute("message", "该条链接已被更改或失效,请使用最新的申请链接");
+				return "fail";
+			}
+		} else {
+			// 链接超时无效
+			request.setAttribute("message", "该条链接已被更改或失效,请使用最新的申请链接");
+			return "fail";
+		}
+	}
+
+}

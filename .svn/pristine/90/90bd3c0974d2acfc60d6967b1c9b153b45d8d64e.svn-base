@@ -1,0 +1,302 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.LoginUserOrderListMapper;
+import com.xdsoft.mvc.mapper.OrdersMapper;
+import com.xdsoft.mvc.mapper.PrintInfoMapper;
+import com.xdsoft.mvc.util.RandOrdernum;
+
+/**
+ * 订单管理
+ * 
+ * @author weiwei
+ * 
+ */
+
+@Service
+public class OrdersService {
+
+	@Resource
+	private OrdersMapper ordersMapper;
+
+	@Resource
+	private PrintInfoMapper printInfoMapper;
+
+	@Resource
+	private LoginUserOrderListMapper loginUserOrderListMapper;
+
+	/** MangerPrintFileState 文件打印状态管理接口 */
+
+	/**
+	 * 根据表Randordernum 、TempFilesInformation表、 PrintInfo表信息综合
+	 * 
+	 * 
+	 * */
+	public List<Map<String, Object>> ListAllNotPrintFile(int start, int limit) {
+
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("printstate", 0);
+		temp.put("start", start);
+		temp.put("limit", limit);
+
+		return ordersMapper.QueryFilesAllInfo(temp);
+
+	}
+
+	/**
+	 * 根据优惠页数以及打印页数计算
+	 * 
+	 * 
+	 */
+	public Map<String, Object> CalcPages(String Ordernum, String bonus) {
+		Map<String, Object> result = new HashMap<String, Object>();
+		List<Map<String, Object>> info = ordersMapper
+				.QueryAllPrintInfo(Ordernum);
+		int calcAllPages = 0;
+		int copyPages = 0;
+		for (Map<String, Object> m : info) {
+			calcAllPages = Integer.parseInt(m.get("filepages").toString())
+					* Integer.parseInt(m.get("copies").toString())
+					+ calcAllPages;
+			copyPages = Integer.parseInt(m.get("filepages").toString())
+					* (Integer.parseInt(m.get("copies").toString()) - 1)
+					+ copyPages;
+		}
+		System.out.println("本次打印总页数" + calcAllPages);
+		result.put("restBonusPages", Integer.parseInt(bonus) - calcAllPages);
+		result.put("PrintPages", calcAllPages);
+		if (Integer.parseInt(bonus) > copyPages)
+			result.put("copyPages", 0);
+		else
+			result.put("copyPages", copyPages - Integer.parseInt(bonus));
+
+		return result;
+
+	}
+
+	/** RandOrdernum表操作 */
+
+	/**
+	 * 获取一条订单号
+	 * 
+	 * @return orderlistnum
+	 */
+	public String GetOrderListNum() {
+		Map<String, Object> rand = new HashMap<String, Object>();
+		String ordernum = RandOrdernum.getOrderNo();
+		rand.put("ordernum", ordernum);
+		rand.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		ordersMapper.CreateRandOrdernum(rand);
+		return this.GetOrderUID(ordernum);
+
+	}
+
+	/**
+	 * 获取订单ID
+	 * 
+	 * @return OrderUID
+	 */
+	public String GetOrderUID(String OrderNum) {
+		Map<String, Object> order = ordersMapper
+				.queryRandOrdernumByOrdernum(OrderNum);
+
+		return order.get("uid").toString();
+
+	}
+
+	/** TempFilesInformation */
+
+	/**
+	 * 插入一条临时文件记录
+	 * 
+	 * @return MAP<String,Object> TempFileInformation
+	 * 
+	 */
+
+	public Map<String, Object> CreateTempFileInfomation(String filesname,
+			String TempFilesLocal, String ordernum) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+		// 生成文件唯一标识
+		String fileunique = RandOrdernum.getOrderNo();
+		temp.put("filesname", filesname);
+		temp.put("tempfilelocal", TempFilesLocal);
+		temp.put("randordernum", ordernum);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		temp.put("fileunique", fileunique);
+
+		int success = ordersMapper.CreateTempFiles(temp);
+		if (success == 1) {
+			temp.put("uid", this.TempFilesQueryByFileUnique(temp));
+			return temp;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 获取TempFileInformationID
+	 * 
+	 * @return int uid
+	 * 
+	 */
+	public int TempFilesQueryByFileUnique(Map<String, Object> temp) {
+
+		Map<String, Object> templ = ordersMapper
+				.TempFilesQueryByFileUnique(temp);
+
+		return (Integer) templ.get("uid");
+
+	}
+
+	/**
+	 * 根据文件uid查询文件信息
+	 * 
+	 */
+	public Map<String, Object> TempFilesQueryByUID(int uid) {
+		return ordersMapper.TempFilesQueryByRanduid(uid);
+	}
+
+	/** OrderList表操作，生成订单信息 */
+
+	/**
+	 * 生成订单
+	 * 
+	 * @参数说明 bonus:优惠券优惠页数、payment：用户实际需要支付的金额、
+	 *       paystatue：本单的支付信息、paytimestamp:支付时间未申请下支付宝接口暂时为空、
+	 *       tempuserinformationuid:临时用户的用户信息ID，若为0则该用户为注册用户、
+	 *       useruid：注册用户信息ID，若为0则该用户为临时用户
+	 * 
+	 */
+	public Map<String, Object> CreateOrderList(String randordernum,
+			String tempuserinformationuid, String useruid, String bonus,
+			String payment) {
+		// randordernum,tempuserinformationuid,paystatue,timestamp,paytimestamp,useruid,bonus,payment
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("randordernum", randordernum);
+		temp.put("tempuserinformationuid", tempuserinformationuid);
+		temp.put("paystatue", 0);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		temp.put("useruid", useruid);
+		temp.put("bonus", bonus);
+		temp.put("payment", payment);
+		if (ordersMapper.CreateOrderList(temp) == 1)
+			return temp;
+		else {
+			Map<String, Object> err = new HashMap<String, Object>();
+			err.put("errinfo", "数据库操作出错！");
+			return err;
+		}
+
+	}
+
+	/** 页数统计操作 */
+
+	/**
+	 * 统计Doc文档页数
+	 * 
+	 * @return String pages
+	 */
+	public String CountPage(String FilePath) {
+
+		CountPageService cp = new CountPageService(false);
+
+		String pages = cp.countPage(FilePath);
+		cp.closeDocument();
+
+		cp.close();
+
+		return pages;
+
+	}
+
+	/** PrintInfo文件打印设置表 */
+
+	/***
+	 * 文件打印信息
+	 * 
+	 * tempfileuid,filepages,printoption1,
+	 * printoption2,copies,timestamp,printstate=0为未打印
+	 * 
+	 * @return Map<String,Object> printinfo
+	 */
+	public Map<String, Object> addPrintInfo(String tempfileuid,
+			String filepages, String printoption1, String printoption2,
+			String copies) {
+		Map<String, Object> temp = new HashMap<String, Object>();
+		temp.put("tempfileuid", tempfileuid);
+		temp.put("filepages", filepages);
+		temp.put("printoption1", printoption1);
+		temp.put("printoption2", printoption2);
+		temp.put("copies", copies);
+		temp.put("timestamp", new Timestamp(System.currentTimeMillis()));
+		temp.put("printstate", 0);
+
+		int success = printInfoMapper.addPrintInfo(temp);
+		if (success == 1) {
+
+		}
+
+		return temp;
+
+	}
+
+	/**
+	 * 根据UID查询文件打印信息
+	 * 
+	 * @return Map<String,Object> fileinformation
+	 * 
+	 */
+	public Map<String, Object> queryPrintInfoByTempfileuid(String tempfileuid) {
+
+		return printInfoMapper.queryPrintInfoByTempfileuid(tempfileuid);
+
+	}
+
+	/**
+	 * 根据文件打印状态查询列表
+	 * 
+	 * @param printstate
+	 *            0为未打印，1为已打印
+	 * 
+	 */
+	public List<Map<String, Object>> queryPrintInfoByPrintState(int printstate) {
+		return printInfoMapper.queryPrintInfoByPrintState(printstate);
+	}
+
+	/**
+	 * 更新文件的打印状态
+	 * 
+	 */
+	public boolean updatePrintState(String uid, String printstate) {
+		Map<String, Object> updateinfo = new HashMap<String, Object>();
+		updateinfo.put("uid", uid);
+		updateinfo.put("printstate", printstate);
+		if (printInfoMapper.updatePrintState(updateinfo) == 1) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	/** 临时表文件 */
+	public int loginuserList(String randordernum, String userinfouid) {
+		Map<String, Object> user = new HashMap<String, Object>();
+		user.put("randordernum", randordernum);
+		user.put("userinfouid", userinfouid);
+		user.put("timestamp", new Timestamp(System.currentTimeMillis()));
+
+		return loginUserOrderListMapper.addInfo(user);
+
+	}
+
+}

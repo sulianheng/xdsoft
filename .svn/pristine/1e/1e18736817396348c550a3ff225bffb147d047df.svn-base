@@ -1,0 +1,63 @@
+package com.xdsoft.mvc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+
+/*
+ * 
+ * User表操作
+ * 
+ **/
+
+@Transactional
+public interface UserMapper {
+
+	Map<String, Object> queryByUnique(String unique); // 根据Username或Email查询用户
+
+	int insertUser(Map<String, Object> user); // 注册新用户
+	
+	int updateAvatar(Map<String, Object> user); //更新头像
+	
+	int updateLastLoginTime(Map<String, Object> user);//最后登陆
+	
+	/***********************************************/
+	/**
+	 * user_extends表操作
+	 */
+	Map<String, Object> queryExtendByUserid(Object user_id);//查询用户扩展信息
+
+	int insertUserExtend(Object user_id);//注册新用户时建立记录
+	
+	int updateUseExtend(Map<String, Object> user);//更改用户扩展信息
+	/***********************************************/
+	
+	
+	
+	/*-------------TempUserInfo----------------------------*/
+	/**
+	 * @author  weiwei
+	 * 
+	 */
+
+	int CreateTempUserinfo(Map<String, Object> user);
+
+	List<Map<String, Object>> TempUserInfoQueryByid(int uid);
+
+	List<Map<String, Object>> TempUserInfoQueryByPhonenum(String phonenum);
+
+	List<Map<String, Object>> TempUserInfoQueryByOrdernumID(int Orderlistid);
+	
+	List<Map<String, Object>> TempUserInfoQueryByOrdernumID(Map<String, Object> temp);
+
+
+
+	/**
+	 * 
+	 * User_Author
+	 * 
+	 */
+
+	Map<String, Object> CheckAuthor(int useruid);
+}

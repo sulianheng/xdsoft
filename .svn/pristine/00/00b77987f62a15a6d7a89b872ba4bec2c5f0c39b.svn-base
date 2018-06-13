@@ -1,0 +1,25 @@
+package com.xdsoft.mvc.mapper;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.transaction.annotation.Transactional;
+
+/*
+ * 
+ * RandOrdernum表、OrderList表、TempFiles表操作
+ * 
+ **/
+
+@Transactional
+public interface ManagerMapper {
+	
+	/**
+	 * 联合查询
+	 */
+	
+	List<Map<String, Object>> CountPrintFilesInfo(String ordernum_id);
+	
+
+	
+}

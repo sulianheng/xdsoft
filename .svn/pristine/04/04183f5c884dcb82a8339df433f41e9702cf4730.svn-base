@@ -1,0 +1,26 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+
+
+<div class="container">
+
+	<form action="<%=basePath%>bunko/seo" method="post">
+			<input type="text"  id="findfile"  name="findfile" value=""/>  <input type="submit"  value="搜索"/>
+			
+			<br>
+			
+			<input type="text"  id="resultfile"  name="resultfile" value=""/>
+	
+	</form>
+
+
+
+
+
+</div>

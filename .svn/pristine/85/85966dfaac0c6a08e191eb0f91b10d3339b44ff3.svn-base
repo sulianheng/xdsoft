@@ -1,0 +1,131 @@
+package com.xdsoft.mvc.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.xdsoft.mvc.service.ManagerService;
+import com.xdsoft.mvc.service.OrdersService;
+import com.xdsoft.web.framework.annotation.PublicPage;
+import com.xdsoft.web.framework.annotation.SinglePage;
+
+/**
+ * 后台管理
+ * @author reyenxu
+ * */
+@Controller
+@RequestMapping(value = "/manager")
+public class ManagerController {
+	
+	@Resource
+	private ManagerService managerService;
+	@Resource
+	private OrdersService ordersService;
+	/**
+	 * 后台管理入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/manager")
+	public String manager(HttpServletRequest request,
+			HttpServletResponse response) {
+
+		return "/manager/manager";
+	}
+	
+	/**
+	 * 所有订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/allOrderDetail")
+	public  String AllOrderDetail(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/AllOrder";
+	}
+
+	/**
+	 * Ajax请求,所有订单详情页
+	 * */
+	@RequestMapping(value = "/getAllOrderDetail" , method = RequestMethod.GET)
+	public @ResponseBody List<Map<String,Object>> allOrderDetail(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryAllOrderDetail();
+	}
+	
+	/**
+	 * 所有未完成订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getUnfinishedOrder")
+	public  String getUnfinishedOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/unfinishedOrder";
+	}
+	/**
+	 * Ajax请求,所有未完成订单详情页
+	 * */
+	@RequestMapping(value = "/getUnfinishedOrder_" , method = RequestMethod.GET)
+	public @ResponseBody List<Map<String,Object>> getUnfinishedOrder(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryAllUnfinishedOrderDetail();
+	}
+	
+	/**
+	 * 已完成订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getFinishedOrder")
+	public  String getFinishedOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/finishedOrder";
+	}
+	
+	/**
+	 * Ajax请求,所有已完成订单详情页
+	 * */
+	@RequestMapping(value = "/getFinishedOrder_" , method = RequestMethod.GET)
+	public @ResponseBody List<Map<String,Object>> getFinishedOrder(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryAllFinishedOrderDetail();
+	}
+	/**
+	 * 超过三天订单详情页,入口
+	 * */
+	@SinglePage
+	@PublicPage
+	@RequestMapping(value = "/getTimeoutOrder")
+	public  String getTimeoutOrder1(HttpServletRequest request,
+			HttpServletResponse response) {
+		return "/manager/timeoutOrder";
+	}
+	/**
+	 * Ajax请求,超过三天订单详情页
+	 * */
+	@RequestMapping(value = "/getTimeoutOrder_" , method = RequestMethod.GET)
+	public @ResponseBody List<Map<String,Object>> getTimeoutOrder(HttpServletRequest request,
+			HttpServletResponse response) {
+		return managerService.queryTimeoutOrderDetail();
+	}
+	/**
+	 * Ajax请求获取同一订单下相关打印文件信息
+	 * @param id
+	 * */
+	@RequestMapping(value = "/getAboveOrderAllFilesPrintInfo" , method = RequestMethod.POST)
+	public @ResponseBody List<Map<String,Object>> getAboveOrderAllFilesPrintInfo(@RequestParam Object id,HttpServletRequest request,
+			HttpServletResponse response) {
+
+		return ordersService.queryFilesInfoByOrderlist_id(id);
+	}
+}

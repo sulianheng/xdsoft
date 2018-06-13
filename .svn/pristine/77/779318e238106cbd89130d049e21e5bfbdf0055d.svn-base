@@ -1,0 +1,177 @@
+package com.xdsoft.mvc.service;
+
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.xdsoft.mvc.mapper.UserMapper;
+import com.xdsoft.mvc.mapper.User_AddressMapper;
+import com.xdsoft.mvc.service.exception.UserExsitsException;
+import com.xdsoft.secure.SecureUtils;
+
+/**
+ * 用户
+ * 
+ * @author reyenxu
+ * 
+ */
+
+@Service
+public class UserService {
+
+	@Resource
+	private UserMapper userMapper;
+
+	@Resource
+	private User_AddressMapper user_AddressMapper;
+
+	@Resource
+	private BaseinformationService baseinformationService;
+
+	/**
+	 * 注册
+	 * 
+	 * @param email
+	 *            , username, password, salt, join_at
+	 * @param 邮箱
+	 *            、用户名、密码、盐值、注册日期
+	 * @return
+	 * @throws UserExsitsException
+	 */
+	public Map<String, Object> register(String email, String username, String password) throws UserExsitsException {
+		if (userMapper.queryByUnique(email) != null || userMapper.queryByUnique(username) != null) {
+			throw new UserExsitsException();
+		}
+
+		Map<String, Object> salt = new HashMap<String, Object>();
+		salt.put("object", password);
+
+		if (!SecureUtils.encryptPassword(salt)) {
+			return null;
+		}
+
+		Map<String, Object> user = new HashMap<String, Object>();
+		user.put("email", email);
+		user.put("username", username);
+		user.put("password", salt.get("objectBysalt"));
+		user.put("salt", salt.get("salt"));
+		user.put("joinat", new Timestamp(System.currentTimeMillis()));
+		user.put("lastlogin", new Timestamp(System.currentTimeMillis()));
+
+		int success = userMapper.insertUser(user);
+		Object user_id = user.get("id");
+
+		insertUseExtend(user_id);// 建立用户扩展信息记录
+
+		if (success == 1) {
+			fixUser(user);
+			return user;
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * 验证用户登录
+	 * 
+	 * @param unique
+	 *            username 或 email
+	 * @param password
+	 * @return
+	 */
+	public Map<String, Object> verify(String unique, String password) {
+		Map<String, Object> user = userMapper.queryByUnique(unique);
+
+		if (user == null) {
+			return null;
+		} else {
+			Map<String, Object> ue = queryExtendByUserid(user.get("id")); // 获取用户扩展信息
+			user.put("nickname", ue.get("nickname"));
+			String salt = (String) user.get("salt");
+			String encryptPassword = SecureUtils.encrypt(password, salt);
+
+			if (encryptPassword != null && encryptPassword.equals(user.get("password"))) {
+				user.put("lastlogin", new Timestamp(System.currentTimeMillis()));
+				userMapper.updateLastLoginTime(user);
+				fixUser(user);
+				return user;
+			} else {
+				return null;
+			}
+		}
+
+	}
+
+	/**
+	 * 处理用户名称如何显示等
+	 * 
+	 * @param user
+	 */
+	public static void fixUser(Map<String, Object> user) {
+		String[] displayOrderFields = { "nickname", "username", "id" };
+		String[] uniqueOrderFields = { "username", "id" };
+
+		if (user != null) {
+			for (String foo : displayOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("displayName", bar);
+					break;
+				}
+			}
+
+			for (String foo : uniqueOrderFields) {
+				Object bar = user.get(foo);
+				if (bar != null) {
+					user.put("unique", bar);
+					break;
+				}
+			}
+		}
+	}
+
+	
+	/**
+	 * 修改用户头像
+	 * 
+	 * @param a
+	 * @return
+	 */
+	public int updateAvatar(Map<String, Object> user) {
+		
+		return userMapper.updateAvatar(user);
+	}
+	
+	
+	/** user_extends 表操作 */
+
+	/**
+	 * @author reyenxu
+	 * @function 查询用户扩展信息
+	 * @param uid
+	 * @return user_extend table record
+	 */
+	public Map<String, Object> queryExtendByUserid(Object user_id) {
+		return userMapper.queryExtendByUserid(user_id);
+	}
+
+	/**
+	 * @function 插入用户在user_extend表
+	 * @param user_id
+	 * @return (int)success
+	 */
+	public int insertUseExtend(Object user_id) {
+		return userMapper.insertUserExtend(user_id);
+	}
+	
+	/**
+	 * @function 更新用户扩展信息资料
+	 * */
+	public int updateUseExtend(Map<String, Object> user){
+		return userMapper.updateUseExtend(user);
+	}
+}

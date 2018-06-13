@@ -1,0 +1,12 @@
+*.ipr
+*.ids
+*.iws
+*.iml
+.idea/
+target/
+config_center_client.log
+jenvrc
+classes/
+.classpath
+/project
+.settings/

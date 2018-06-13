@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdsoft.mvc.mapper.OrdersMapper">
+
+	<!--RandUUid -->
+	<!--生成一个唯一串并放入数据库 -->
+	<insert id="CreateRandOrdernum" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="uid">
+		insert into
+		randordernum(ordernum,timestamp)
+		values(#{ordernum},#{timestamp})
+	</insert>
+
+	<!--根据Ordernum查询唯一标识的UUID -->
+	<select id="queryRandOrdernumByOrdernum" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select * from randordernum r
+		where r.ordernum = #{ordernum}
+	</select>
+
+	<!--根据uid查询唯一标识的UUID -->
+	<select id="queryRandOrdernumByUID" parameterType="int"
+		resultType="java.util.Map">
+		select * from randordernum r
+		where r.uid = #{uid}
+	</select>
+
+	<!--根据uid删除已存在的UUID -->
+	<delete id="deleteRandOrdernum" parameterType="int">
+		delete from
+		randordernum where uid = #{uid}
+	</delete>
+
+	<!-- 返回UUID表的所有数据按照时间降序 -->
+	<select id="queryAllRandOrdernum" parameterType="int"
+		resultType="java.util.Map">
+		select * from randordernum r
+		order by r.timestamp asc
+	</select>
+
+
+	<!--TempFiles -->
+	<!--插入一个文件数据 -->
+	<insert id="CreateTempFiles" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="uid">
+		insert into
+		tempfile(filesname,tempfilelocal,randordernum,timestamp,fileunique)
+		values(#{filesname},#{tempfilelocal},#{randordernum},#{timestamp},#{fileunique})
+	</insert>
+
+	<!--根据FileUnique值查询文件信息 -->
+	<select id="TempFilesQueryByFileUnique" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.fileunique = #{fileunique}
+	</select>
+
+	<!--根据Timestamp值查询文件信息 -->
+	<select id="TempFilesQueryByTimestamp" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.timestamp = #{timestamp}
+	</select>
+
+
+	<!--根据RandUID值查询文件信息 -->
+	<select id="TempFilesQueryByRanduid" parameterType="int"
+		resultType="java.util.Map">
+		select * from tempfile t
+		where t.randordernum =
+		#{randordernum}
+	</select>
+
+	<select id="TempFilesQueryByUID" parameterType="int" resultType="java.util.Map">
+		select * from tempfile t
+		where t.uid = #{uid}
+	</select>
+
+	<!-- 返回UUID表的所有数据按照时间降序 -->
+	<select id="queryAllTempFiles" resultType="java.util.Map">
+		select * from tempfile
+		r
+		order by r.timestamp asc
+	</select>
+
+
+
+	<!--OrderList -->
+	<!-- 新订单 -->
+	<insert id="CreateOrderList" parameterType="java.util.Map"
+		useGeneratedKeys="true" keyProperty="uid">
+		insert into
+		orderlist(randordernum,tempuserinformationuid,paystatue,timestamp,paytimestamp,useruid,bonus,payment)
+		values(#{randordernum},#{tempuserinformationuid},#{paystatue},#{timestamp},#{paytimestamp,jdbcType=TIMESTAMP},#{useruid},#{bonus},#{payment})
+	</insert>
+
+	<select id="OrderlistQueryByUID" parameterType="int" resultType="java.util.Map">
+		select * from orderlist o
+		where o.uid = #{uid}
+	</select>
+
+	<select id="queryRanduid" parameterType="int" resultType="java.util.Map">
+		select
+		* from orderlist o
+		where o.randordernum = #{randordernum}
+	</select>
+
+
+	<!-- 联合查询 -->
+	<!-- in (select a.tempfileuid from tempfile a where printstate=#{printstate} 
+		limit #{start},#{limit}) -->
+
+	<select id="QueryFilesAllInfo" parameterType="java.util.Map"
+		resultType="java.util.Map">
+		select
+		p.printoption1,p.printoption2,p.copies,p.printstate,t.fileunique,t.timestamp,u.phonenum,u.addressid,u.sendtime,u.receivename,
+		u.orderliststate,u.dorm
+		from printinfo p,tempfile t,tempuserinfo u
+		where
+		p.printstate=#{printstate} and t.uid = p.tempfileuid and
+		u.randuid =t.randordernum
+		order by t.timestamp asc
+		limit
+		#{start},#{limit}
+	</select>
+
+	<select id="QueryAllPrintInfo" parameterType="java.lang.String"
+		resultType="java.util.Map">
+		select
+		p.*
+		from printinfo p,tempfile t
+		where
+		t.randordernum=#{randordernum} and p.tempfileuid = t.uid
+	</select>
+
+
+
+
+
+</mapper>  

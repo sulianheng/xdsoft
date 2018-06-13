@@ -1,0 +1,170 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%><%@
+taglib
+	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>所有订单详情查看</title>
+
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache">
+
+<link rel="icon" href="<%=basePath%>favicon.png">
+<script src="<%=basePath%>static/jquery/2.1.1/jquery.min.js"></script>
+<script src="<%=basePath%>static/bootstrap/js/bootstrap.min.js"></script>
+<script src="<%=basePath%>static/bootstrap/js/bootstrap-table.js"></script>
+<script type="text/javascript"
+	src="<%=basePath%>static/bootstrap/js/bootstrap-table-filter-control.js"></script>
+<script src="<%=basePath%>static/bootstrap/js/tableExport.js"></script>
+<script src="<%=basePath%>static/bootstrap/js/bootstrap-table-export.js"></script>
+
+<link href="<%=basePath%>static/bootstrap/css/bootstrap.min.css"
+	rel="stylesheet">
+<link href="<%=basePath%>static/bootstrap/css/bootstrap-table.css"
+	rel="stylesheet">
+</head>
+
+<body>
+	<div class="container">
+		<div id="toolbar">
+			<select class="form-control">
+				<option value="">Export Basic</option>
+				<option value="all">Export All</option>
+				<option value="selected">Export Selected</option>
+			</select>
+		</div>
+		<table id="table" class="table-striped table table-hover"
+			data-toggle="table" data-search="true" data-show-refresh="true"
+			data-show-columns="true" data-show-toggle="true"
+			data-show-export="false" data-click-to-select="true"
+			data-pagination="true" data-page-size="8"
+			data-show-pagination-switch="true" data-detail-view="true"
+			data-detail-formatter="detailFormatter"
+			data-url="<%=basePath%>manager/getAllOrderDetail?start_page=-1"
+			data-toolbar="#toolbar">
+			<thead>
+				<tr>
+					<th data-field="state" data-checkbox="true"></th>
+					<th data-field="username" data-align="left">用户名</th>
+					<th data-field="id" data-align="left">订单id</th>
+					<th data-field="ordernum" data-align="left">订单号</th>
+					<th data-field="payment" data-align="left">消费金额</th>
+					<th data-field="order_state" data-align="left">订单支付状态</th>
+					<th data-field="print_state" data-align="left">打印状态</th>
+					<th data-field="paytimestamp" data-align="left">支付时间</th>
+					<th data-field="timestamp" data-align="right">下单时间</th>
+				</tr>
+			</thead>
+		</table>
+<%--  		<c:choose>
+			<c:when test="${page lt maxPage}">
+				<a
+					href="<%=basePath %>user/product_view?start_page=${page+1}&has_sale=0"
+					class="btn btn-orange pull-right">下一页</a>
+			</c:when>
+			<c:otherwise>
+				<a href="javascript:void(0);" class="btn btn-gray pull-right">最后一页</a>
+			</c:otherwise>
+		</c:choose>
+		<c:choose>
+			<c:when test="${page gt 1}">
+				<a
+					href="<%=basePath %>user/product_view?start_page=${page-1}&has_sale=0"
+					class="btn btn-orange pull-right">上一页</a>
+			</c:when>
+			<c:otherwise>
+				<a href="javascript:void(0);" class="btn btn-gray pull-right">首页</a>
+			</c:otherwise>
+		</c:choose> --%>
+<!-- 		<a href="javascript:prevPage();" class="btn btn-primary">上一页</a> <a
+			href="javascript:void(0);" class="btn btn-primary">下一页</a> -->
+	</div>
+	<script>
+		function detailFormatter(index, row) {
+			var html = [];
+			var list = []; 
+			
+			$.post("<%=basePath%>manager/getAboveOrderAllFilesPrintInfo", {
+				id : row.id
+			}, function(data) {
+				console.log('order_id:' + row.id);
+				console.log('return_back success');
+				console.log(data.length + '----' + data[0].fileunique);
+				console.log('--------------------');
+				$('.detail-view').find('td').remove();
+				for(var i=0;i<data.length;i++){
+					console.log('文件名' + data[i].filename);
+					var $tr = '<td><p><b> 源文件名:</b><a href="<%=basePath%>manager/download?filename=' + data[i].tempfilelocal + '"> ' + data[i].filename + '</a></p>'
+							  +'<p><b> 文件唯一标示:</b> ' + data[i].fileunique + '</p>'
+							  +'<p><b> 打印方式:</b>' + data[i].option11+'</p>'
+							  +'<p><b> 打印模板:</b>' + data[i].option22+'</p>'
+							  +'<p><b> 打印份数:</b>' + data[i].copies+'</p></td>';
+					$('.detail-view').append($tr);
+				}
+				
+			});
+
+		}
+		 function DoOnCellHtmlData(cell, row, col, s) {
+			console.log('DoOnCellHtmlData method'); 
+			var result = "";
+			if (typeof data != 'undefined' && data != "") {
+				var html = $.parseHTML(data);
+				
+				$.each(html, function() {
+					if (typeof $(this).html() === 'undefined')
+						result += $(this).text();
+					else if (typeof $(this).attr('class') === 'undefined'
+							|| $(this).hasClass('th-inner') === true)
+						result += $(this).html();
+				});
+			}
+			return result;
+		}
+ 		$(function() {
+			$('#toolbar').find('select').change(function() {
+				$('#table').bootstrapTable('refreshOptions', {
+					exportDataType : $(this).val()
+				});
+			});
+			
+		});
+ 		
+		//上一页
+		//function prevPage() {
+			//var data = $('#table').bootstrapTable('getSelections');
+			//alert(data.id);
+			//$table.bootstrapTable('selectPage', 2);
+			//var data = $('#table').bootstrapTable('getRowByUniqueId', 1);
+			//alert(data);
+			//console.log('prevPage method');
+			//$('#table').bootstrapTable('prevPage');
+		//}
+
+		//下一页
+		/* function nextPage() {
+			$('#table').bootstrapTable('nextPage');
+		} */
+
+		$(document).ready(function() {
+			$('#table').bootstrapTable('refreshOptions', {
+				exportOptions : {
+					ignoreColumn : [ 0, 1 ],
+					onCellHtmlData : DoOnCellHtmlData
+				}
+			});
+		});
+	</script>
+</body>
+</html>
